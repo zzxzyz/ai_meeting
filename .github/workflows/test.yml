@@ -1,0 +1,156 @@
+# GitHub Actions CI/CD 测试流水线配置
+# 自动运行测试并检查覆盖率
+
+name: Test Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  unit-test:
+    name: 单元测试
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout 代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: tests/package-lock.json
+
+      - name: 安装依赖
+        run: |
+          cd tests
+          npm ci
+
+      - name: 启动测试服务
+        run: docker-compose -f docker-compose.test.yml up -d
+
+      - name: 等待服务就绪
+        run: |
+          sleep 10
+          docker-compose -f docker-compose.test.yml ps
+
+      - name: 运行单元测试
+        run: |
+          cd tests
+          npm run test:unit -- --ci --coverage
+
+      - name: 上传覆盖率报告
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./tests/coverage/lcov.info
+          flags: unit
+
+      - name: 检查覆盖率阈值
+        run: |
+          cd tests
+          npm run test:coverage -- --coverageThreshold='{"global":{"branches":70,"functions":70,"lines":80,"statements":80}}'
+
+      - name: 清理
+        if: always()
+        run: docker-compose -f docker-compose.test.yml down
+
+  integration-test:
+    name: 集成测试
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout 代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: 安装依赖
+        run: |
+          cd tests
+          npm ci
+
+      - name: 启动测试服务
+        run: docker-compose -f docker-compose.test.yml up -d
+
+      - name: 等待服务就绪
+        run: sleep 15
+
+      - name: 运行集成测试
+        run: |
+          cd tests
+          npm run test:integration -- --ci
+
+      - name: 清理
+        if: always()
+        run: docker-compose -f docker-compose.test.yml down
+
+  e2e-test:
+    name: E2E 测试 - ${{ matrix.browser }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        browser: [chromium, firefox, webkit]
+
+    steps:
+      - name: Checkout 代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: 安装依赖
+        run: |
+          cd tests
+          npm ci
+
+      - name: 安装 Playwright 浏览器
+        run: |
+          cd tests
+          npx playwright install --with-deps ${{ matrix.browser }}
+
+      - name: 启动测试服务
+        run: docker-compose -f docker-compose.test.yml up -d
+
+      - name: 运行 E2E 测试
+        run: |
+          cd tests
+          npm run test:e2e -- --project=${{ matrix.browser }}
+
+      - name: 上传测试报告
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-report-${{ matrix.browser }}
+          path: tests/playwright-report/
+          retention-days: 7
+
+      - name: 清理
+        if: always()
+        run: docker-compose -f docker-compose.test.yml down
+
+  coverage-report:
+    name: 生成覆盖率总报告
+    needs: [unit-test, integration-test]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: 下载覆盖率数据
+        uses: actions/download-artifact@v3
+
+      - name: 生成覆盖率评论
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
