@@ -1,0 +1,53 @@
+# Node
+node_modules
+npm-debug.log
+yarn-error.log
+pnpm-lock.yaml
+
+# Build
+dist
+build
+.next
+out
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Docs
+README.md
+docs/
+
+# Tests
+coverage
+*.test.js
+*.spec.js
+test/
+tests/
+__tests__/
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
