@@ -1,0 +1,285 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/anthropics/claude-code/schemas/task-v2.json",
+  "title": "Task Schema v2",
+  "description": "Enhanced task schema with role-based access control and optimistic locking",
+  "version": "2.0.0",
+  "type": "object",
+  "required": ["id", "subject", "description", "status", "version"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the task",
+      "pattern": "^[0-9]+$",
+      "examples": ["1", "42", "123"]
+    },
+    "subject": {
+      "type": "string",
+      "description": "Brief title for the task, preferably in format '[role] task description'",
+      "minLength": 1,
+      "maxLength": 200,
+      "examples": [
+        "[backend-leader] REQ-002 后端实现",
+        "[frontend-leader] 实现会议列表页面"
+      ]
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of what needs to be done",
+      "minLength": 1
+    },
+    "activeForm": {
+      "type": "string",
+      "description": "Present continuous form shown in spinner when in_progress",
+      "minLength": 1,
+      "maxLength": 100,
+      "examples": ["实现后端服务", "设计 API 接口"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "in_progress", "completed", "deleted"],
+      "description": "Current status of the task",
+      "default": "pending"
+    },
+    "owner": {
+      "type": "string",
+      "description": "Agent name who is assigned to this task (empty string if unassigned)",
+      "default": "",
+      "examples": ["", "backend-leader", "frontend-leader", "team-lead"]
+    },
+    "requiredRole": {
+      "type": "string",
+      "description": "The role required to claim this task. If undefined, any role can claim it.",
+      "enum": [
+        "team-lead",
+        "product-manager",
+        "architect",
+        "backend-leader",
+        "frontend-leader",
+        "client-leader",
+        "test-leader",
+        "devops-leader"
+      ],
+      "examples": ["backend-leader", "frontend-leader"]
+    },
+    "version": {
+      "type": "integer",
+      "description": "Version number for optimistic locking. Incremented on each update.",
+      "minimum": 1,
+      "default": 1,
+      "examples": [1, 2, 5]
+    },
+    "taskType": {
+      "type": "string",
+      "description": "Category of the task for classification and statistics",
+      "enum": [
+        "requirement_analysis",
+        "tech_research",
+        "architecture_design",
+        "api_design",
+        "ui_design",
+        "backend_implementation",
+        "frontend_implementation",
+        "client_implementation",
+        "testing",
+        "deployment",
+        "documentation",
+        "code_review",
+        "bug_fix",
+        "optimization",
+        "other"
+      ],
+      "examples": ["backend_implementation", "testing", "architecture_design"]
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Arbitrary metadata to attach to the task",
+      "additionalProperties": true,
+      "examples": [
+        { "priority": "high", "estimatedHours": 4 },
+        { "requirementId": "REQ-002", "milestone": "v0.1" }
+      ]
+    },
+    "blocks": {
+      "type": "array",
+      "description": "List of task IDs that this task blocks (tasks that cannot start until this one completes)",
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9]+$"
+      },
+      "uniqueItems": true,
+      "default": [],
+      "examples": [[], ["6", "7"]]
+    },
+    "blockedBy": {
+      "type": "array",
+      "description": "List of task IDs that block this task (tasks that must complete before this one can start)",
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9]+$"
+      },
+      "uniqueItems": true,
+      "default": [],
+      "examples": [[], ["3", "4"]]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the task was created",
+      "examples": ["2026-02-15T10:30:00Z"]
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the task was last updated",
+      "examples": ["2026-02-15T11:45:00Z"]
+    }
+  },
+  "examples": [
+    {
+      "id": "5",
+      "subject": "[backend-leader] REQ-002 后端实现 - 会议管理服务",
+      "description": "⚠️ **本任务仅限 backend-leader 领取**\n\n**任务目标**:\n实现完整的会议管理后端服务...",
+      "activeForm": "实现会议管理服务",
+      "status": "in_progress",
+      "owner": "backend-leader",
+      "requiredRole": "backend-leader",
+      "version": 3,
+      "taskType": "backend_implementation",
+      "metadata": {
+        "priority": "HIGH",
+        "requirementId": "REQ-002"
+      },
+      "blocks": ["6", "7"],
+      "blockedBy": ["3"],
+      "createdAt": "2026-02-15T10:00:00Z",
+      "updatedAt": "2026-02-15T10:30:00Z"
+    },
+    {
+      "id": "10",
+      "subject": "[architect] 技术调研 - WebSocket 推送方案",
+      "description": "调研并确定会议状态实时推送的技术方案...",
+      "activeForm": "调研 WebSocket 方案",
+      "status": "completed",
+      "owner": "architect",
+      "requiredRole": "architect",
+      "version": 2,
+      "taskType": "tech_research",
+      "metadata": {},
+      "blocks": ["5"],
+      "blockedBy": [],
+      "createdAt": "2026-02-14T14:00:00Z",
+      "updatedAt": "2026-02-14T16:30:00Z"
+    },
+    {
+      "id": "20",
+      "subject": "创建项目文档目录结构",
+      "description": "初始化文档目录,任何角色都可以领取",
+      "activeForm": "创建目录结构",
+      "status": "pending",
+      "owner": "",
+      "version": 1,
+      "taskType": "documentation",
+      "metadata": {},
+      "blocks": [],
+      "blockedBy": [],
+      "createdAt": "2026-02-15T09:00:00Z",
+      "updatedAt": "2026-02-15T09:00:00Z"
+    }
+  ],
+  "definitions": {
+    "Role": {
+      "type": "string",
+      "enum": [
+        "team-lead",
+        "product-manager",
+        "architect",
+        "backend-leader",
+        "frontend-leader",
+        "client-leader",
+        "test-leader",
+        "devops-leader"
+      ],
+      "description": "Valid role names in the team"
+    },
+    "TaskStatus": {
+      "type": "string",
+      "enum": ["pending", "in_progress", "completed", "deleted"],
+      "description": "Valid task statuses"
+    },
+    "TaskType": {
+      "type": "string",
+      "enum": [
+        "requirement_analysis",
+        "tech_research",
+        "architecture_design",
+        "api_design",
+        "ui_design",
+        "backend_implementation",
+        "frontend_implementation",
+        "client_implementation",
+        "testing",
+        "deployment",
+        "documentation",
+        "code_review",
+        "bug_fix",
+        "optimization",
+        "other"
+      ],
+      "description": "Valid task types for classification"
+    },
+    "StateTransitions": {
+      "description": "Allowed state transitions for task status",
+      "type": "object",
+      "properties": {
+        "pending": {
+          "type": "array",
+          "items": { "enum": ["in_progress", "deleted"] }
+        },
+        "in_progress": {
+          "type": "array",
+          "items": { "enum": ["completed", "deleted"] }
+        },
+        "completed": {
+          "type": "array",
+          "items": { "enum": ["deleted"] },
+          "description": "Only team-lead can transition from completed to deleted"
+        },
+        "deleted": {
+          "type": "array",
+          "items": {},
+          "maxItems": 0,
+          "description": "Terminal state, no transitions allowed"
+        }
+      }
+    }
+  },
+  "metadata": {
+    "changelog": [
+      {
+        "version": "2.0.0",
+        "date": "2026-02-15",
+        "changes": [
+          "Added 'requiredRole' field for role-based task assignment",
+          "Added 'version' field for optimistic locking",
+          "Added 'taskType' field for task classification",
+          "Made 'version' a required field (defaults to 1 for backward compatibility)",
+          "Maintained backward compatibility with v1 tasks"
+        ]
+      },
+      {
+        "version": "1.0.0",
+        "date": "2026-02-13",
+        "changes": [
+          "Initial task schema"
+        ]
+      }
+    ],
+    "compatibility": {
+      "v1": {
+        "description": "Tasks without 'version' field will be treated as version 1",
+        "migration": "Read tools should set default values: version=1, requiredRole=undefined, taskType=undefined"
+      }
+    }
+  }
+}

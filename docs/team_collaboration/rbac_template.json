@@ -1,0 +1,303 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0",
+  "description": "RBAC 配置模板 - 定义角色权限和任务类型映射关系",
+  "lastUpdated": "2026-02-15",
+  "roles": {
+    "team-lead": {
+      "permissions": {
+        "canClaimAnyTask": true,
+        "canApproveAssignment": true,
+        "canManageRBAC": true,
+        "allowedTaskTypes": ["*"]
+      },
+      "priority": 100,
+      "description": "团队负责人,拥有全部权限,负责任务分配和协调",
+      "responsibilities": [
+        "创建和分配任务",
+        "审批跨角色领取请求",
+        "监控团队进度",
+        "解决协作冲突",
+        "管理 RBAC 配置"
+      ]
+    },
+    "product-manager": {
+      "permissions": {
+        "canClaimAnyTask": false,
+        "canApproveAssignment": false,
+        "canManageRBAC": false,
+        "allowedTaskTypes": ["documentation", "design"]
+      },
+      "priority": 80,
+      "description": "产品经理,负责需求分析和设计评审",
+      "responsibilities": [
+        "编写需求分析文档 (PRD)",
+        "设计产品功能",
+        "评审 UI/UX 设计",
+        "编写用户故事",
+        "维护产品文档"
+      ]
+    },
+    "architect": {
+      "permissions": {
+        "canClaimAnyTask": false,
+        "canApproveAssignment": false,
+        "canManageRBAC": false,
+        "allowedTaskTypes": ["architecture", "documentation"]
+      },
+      "priority": 90,
+      "description": "架构师,负责架构设计和技术调研",
+      "responsibilities": [
+        "系统架构设计",
+        "技术选型和调研",
+        "编写 ADR (架构决策记录)",
+        "技术方案评审",
+        "性能优化建议"
+      ]
+    },
+    "backend-leader": {
+      "permissions": {
+        "canClaimAnyTask": false,
+        "canApproveAssignment": false,
+        "canManageRBAC": false,
+        "allowedTaskTypes": ["backend", "testing"]
+      },
+      "priority": 70,
+      "description": "后端负责人,负责后端实现和 API 开发",
+      "responsibilities": [
+        "后端服务实现",
+        "API 开发和文档",
+        "数据库设计和优化",
+        "编写后端单元测试",
+        "性能优化"
+      ]
+    },
+    "frontend-leader": {
+      "permissions": {
+        "canClaimAnyTask": false,
+        "canApproveAssignment": false,
+        "canManageRBAC": false,
+        "allowedTaskTypes": ["frontend", "testing"]
+      },
+      "priority": 70,
+      "description": "前端负责人,负责前端实现和 Web 端开发",
+      "responsibilities": [
+        "前端页面和组件开发",
+        "状态管理实现",
+        "与后端 API 集成",
+        "编写前端单元测试",
+        "性能优化和用户体验优化"
+      ]
+    },
+    "client-leader": {
+      "permissions": {
+        "canClaimAnyTask": false,
+        "canApproveAssignment": false,
+        "canManageRBAC": false,
+        "allowedTaskTypes": ["client", "testing"]
+      },
+      "priority": 70,
+      "description": "客户端负责人,负责客户端实现和跨平台适配",
+      "responsibilities": [
+        "Electron 客户端开发",
+        "SDK 开发",
+        "跨平台兼容性处理",
+        "客户端测试",
+        "打包和发布"
+      ]
+    },
+    "test-leader": {
+      "permissions": {
+        "canClaimAnyTask": false,
+        "canApproveAssignment": false,
+        "canManageRBAC": false,
+        "allowedTaskTypes": ["testing"]
+      },
+      "priority": 75,
+      "description": "测试负责人,负责测试和质量保障",
+      "responsibilities": [
+        "测试用例设计",
+        "单元测试、集成测试、E2E 测试",
+        "测试报告编写",
+        "质量把控",
+        "Bug 跟踪和回归测试"
+      ]
+    },
+    "devops-leader": {
+      "permissions": {
+        "canClaimAnyTask": false,
+        "canApproveAssignment": false,
+        "canManageRBAC": false,
+        "allowedTaskTypes": ["devops", "backend"]
+      },
+      "priority": 70,
+      "description": "运维负责人,负责部署和运维",
+      "responsibilities": [
+        "CI/CD 流程配置",
+        "Docker 容器化",
+        "部署脚本编写",
+        "监控和告警配置",
+        "生产环境维护"
+      ]
+    }
+  },
+  "taskTypes": {
+    "documentation": {
+      "name": "文档类",
+      "description": "需求分析、技术调研、API 契约、ADR 等文档编写",
+      "keywords": ["需求分析", "技术调研", "API契约", "PRD", "文档编写", "ADR"],
+      "typicalDeliverables": [".md 文档"],
+      "estimatedDuration": "1-4 小时"
+    },
+    "design": {
+      "name": "设计类",
+      "description": "UI/UX 设计、交互设计、视觉设计",
+      "keywords": ["UI设计", "UX设计", "原型设计", "交互设计", "视觉设计"],
+      "typicalDeliverables": ["设计文档", "原型图", "设计稿"],
+      "estimatedDuration": "2-6 小时"
+    },
+    "architecture": {
+      "name": "架构类",
+      "description": "系统架构设计、技术选型、架构决策",
+      "keywords": ["架构设计", "技术选型", "ADR", "系统设计", "方案设计"],
+      "typicalDeliverables": ["架构文档", "ADR", "技术方案"],
+      "estimatedDuration": "2-8 小时"
+    },
+    "backend": {
+      "name": "后端类",
+      "description": "后端实现、API 开发、数据库设计",
+      "keywords": ["后端实现", "API开发", "数据库", "服务端", "接口开发"],
+      "typicalDeliverables": [".ts/.js 代码", "API 文档"],
+      "estimatedDuration": "4-16 小时"
+    },
+    "frontend": {
+      "name": "前端类",
+      "description": "前端实现、Web 端开发、组件开发",
+      "keywords": ["前端实现", "Web开发", "组件开发", "页面开发", "React"],
+      "typicalDeliverables": [".tsx/.jsx 代码", "组件"],
+      "estimatedDuration": "4-16 小时"
+    },
+    "client": {
+      "name": "客户端类",
+      "description": "客户端实现、SDK 开发、跨平台适配",
+      "keywords": ["客户端", "Electron", "SDK", "跨平台", "桌面应用"],
+      "typicalDeliverables": ["客户端代码", "SDK"],
+      "estimatedDuration": "4-16 小时"
+    },
+    "testing": {
+      "name": "测试类",
+      "description": "测试设计、测试执行、质量保障",
+      "keywords": ["测试", "单元测试", "集成测试", "E2E", "质量保障"],
+      "typicalDeliverables": ["测试代码", "测试报告"],
+      "estimatedDuration": "2-8 小时"
+    },
+    "devops": {
+      "name": "运维类",
+      "description": "部署配置、CI/CD、监控告警",
+      "keywords": ["部署", "CI/CD", "Docker", "监控", "运维"],
+      "typicalDeliverables": ["部署脚本", "配置文件", "CI/CD 配置"],
+      "estimatedDuration": "2-8 小时"
+    }
+  },
+  "settings": {
+    "strictMode": false,
+    "requireApprovalForCrossRole": true,
+    "autoRejectIfNoPermission": false,
+    "recommendationEnabled": true,
+    "autoAssignmentEnabled": false,
+    "notificationEnabled": true,
+    "historyTrackingEnabled": true
+  },
+  "approvalRules": {
+    "autoApproveConditions": [
+      {
+        "condition": "taskPriority === 'high' && requesterCurrentTasks.length < 2",
+        "description": "高优先级任务且申请者负载低时自动批准"
+      },
+      {
+        "condition": "allowedCrossRolePairs[requesterRole].includes(taskType)",
+        "description": "特定角色组合允许自动跨界"
+      }
+    ],
+    "autoRejectConditions": [
+      {
+        "condition": "requesterCurrentTasks.length >= 3",
+        "description": "申请者任务过多时自动拒绝"
+      },
+      {
+        "condition": "strictMode === true",
+        "description": "严格模式下自动拒绝所有跨角色请求"
+      }
+    ],
+    "allowedCrossRolePairs": {
+      "frontend-leader": ["testing", "design"],
+      "backend-leader": ["testing", "devops"],
+      "client-leader": ["testing", "frontend"],
+      "test-leader": ["backend", "frontend", "client"],
+      "devops-leader": ["backend"]
+    }
+  },
+  "priorityConfig": {
+    "high": {
+      "name": "高优先级",
+      "score": 20,
+      "color": "#EF4444",
+      "icon": "🔴",
+      "description": "阻塞其他任务、紧急 bug、关键路径",
+      "responseTime": "立即处理",
+      "examples": [
+        "修复生产环境 bug",
+        "关键功能阻塞问题",
+        "安全漏洞修复"
+      ]
+    },
+    "medium": {
+      "name": "中优先级",
+      "score": 10,
+      "color": "#F59E0B",
+      "icon": "🟡",
+      "description": "正常开发任务、功能实现",
+      "responseTime": "按计划处理",
+      "examples": [
+        "实现新功能",
+        "常规需求开发",
+        "功能优化"
+      ]
+    },
+    "low": {
+      "name": "低优先级",
+      "score": 5,
+      "color": "#10B981",
+      "icon": "🟢",
+      "description": "优化改进、技术债、文档完善",
+      "responseTime": "有空闲时处理",
+      "examples": [
+        "代码重构",
+        "文档更新",
+        "性能优化",
+        "技术债偿还"
+      ]
+    }
+  },
+  "recommendationWeights": {
+    "roleMatch": 0.4,
+    "history": 0.3,
+    "priority": 0.2,
+    "loadBalance": 0.1
+  },
+  "notificationSettings": {
+    "sendOnTaskAssignment": true,
+    "sendOnApprovalRequest": true,
+    "sendOnApprovalResponse": true,
+    "sendOnHighPriorityTask": true,
+    "sendOnTaskBlocked": true
+  },
+  "metadata": {
+    "schemaVersion": "1.0",
+    "createdAt": "2026-02-15T00:00:00Z",
+    "updatedAt": "2026-02-15T00:00:00Z",
+    "author": "architect",
+    "purpose": "定义 Agent Team 协作中的角色权限、任务类型映射和智能推荐规则",
+    "usage": "将此文件复制到 ~/.claude-internal/teams/{team-name}/rbac.json"
+  }
+}
