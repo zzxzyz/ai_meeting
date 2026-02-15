@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(test:*)",
-      "Bash(pnpm list:*)"
+      "Bash(pnpm list:*)",
+      "Bash(find:*)",
+      "Bash(cat:*)",
+      "Bash(chmod:*)",
+      "Bash(./verify-integration.sh:*)",
+      "Bash(grep:*)"
     ]
   }
 }

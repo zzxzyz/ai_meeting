@@ -1,20 +1,63 @@
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import { Button } from '@ai-meeting/ui';
+import { Login } from './pages/Login';
+import { Register } from './pages/Register';
+import { PrivateRoute } from './components/PrivateRoute';
+import { useAuth } from './hooks/useAuth';
 
 function App() {
   return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route
+        path="/"
+        element={
+          <PrivateRoute>
+            <MainLayout />
+          </PrivateRoute>
+        }
+      >
+        <Route index element={<HomePage />} />
+        <Route path="meeting/:id" element={<MeetingPage />} />
+      </Route>
+    </Routes>
+  );
+}
+
+function MainLayout() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+
+  return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <h1 className="text-3xl font-bold text-gray-900">AI Meeting</h1>
+          {user && (
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-600">欢迎，{user.nickname}</span>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                退出登录
+              </button>
+            </div>
+          )}
         </div>
       </header>
       <main>
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
           <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/meeting/:id" element={<MeetingPage />} />
+            <Route index element={<HomePage />} />
+            <Route path="meeting/:id" element={<MeetingPage />} />
           </Routes>
         </div>
       </main>

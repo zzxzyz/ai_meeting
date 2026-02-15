@@ -5,12 +5,13 @@
     "paths": {
       "@/*": ["./src/renderer/*"],
       "@/types/*": ["./src/types/*"],
-      "@/utils/*": ["./src/utils/*"]
+      "@/utils/*": ["./src/utils/*"],
+      "@web/*": ["../web/src/*"]
     },
     "jsx": "react-jsx",
     "types": ["vite/client"]
   },
-  "include": ["src/renderer", "src/types", "src/utils"],
+  "include": ["src/renderer", "src/types", "src/utils", "../web/src"],
   "references": [
     { "path": "../../packages/shared" },
     { "path": "../../packages/ui" }

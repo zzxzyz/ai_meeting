@@ -1,20 +1,64 @@
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import { Button } from '@ai-meeting/ui';
+// 复用 Web 端的页面组件
+import { Login } from '@web/pages/Login';
+import { Register } from '@web/pages/Register';
+import { PrivateRoute } from '@web/components/PrivateRoute';
+import { useAuth } from '@web/hooks/useAuth';
 
 function App() {
   return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route
+        path="/"
+        element={
+          <PrivateRoute>
+            <MainLayout />
+          </PrivateRoute>
+        }
+      >
+        <Route index element={<HomePage />} />
+        <Route path="meeting/:id" element={<MeetingPage />} />
+      </Route>
+    </Routes>
+  );
+}
+
+function MainLayout() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+
+  return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-gray-900">AI Meeting</h1>
+        <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+          <h1 className="text-3xl font-bold text-gray-900">AI Meeting (Electron)</h1>
+          {user && (
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-600">欢迎，{user.nickname}</span>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                退出登录
+              </button>
+            </div>
+          )}
         </div>
       </header>
       <main>
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
           <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/meeting/:id" element={<MeetingPage />} />
+            <Route index element={<HomePage />} />
+            <Route path="meeting/:id" element={<MeetingPage />} />
           </Routes>
         </div>
       </main>
@@ -27,7 +71,7 @@ function HomePage() {
     <div className="px-4 py-6 sm:px-0">
       <div className="text-center">
         <h2 className="text-2xl font-semibold mb-4">欢迎使用 AI Meeting</h2>
-        <p className="text-gray-600 mb-8">企业级视频会议系统 MVP v0.1</p>
+        <p className="text-gray-600 mb-8">企业级视频会议系统 MVP v0.1 - Electron 客户端</p>
         <div className="flex gap-4 justify-center">
           <Button variant="primary">创建会议</Button>
           <Button variant="secondary">加入会议</Button>

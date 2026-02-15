@@ -11,6 +11,8 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src/renderer'),
       '@/types': path.resolve(__dirname, './src/types'),
       '@/utils': path.resolve(__dirname, './src/utils'),
+      // 添加 Web 端路径别名以支持代码复用
+      '@web': path.resolve(__dirname, '../web/src'),
     },
   },
   server: {

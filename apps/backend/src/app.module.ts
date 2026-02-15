@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CacheModule } from '@nestjs/cache-manager';
+import { ThrottlerModule } from '@nestjs/throttler';
 import * as redisStore from 'cache-manager-redis-store';
 import { UserModule } from '@/api/controllers/user/user.module';
 import { MeetingModule } from '@/api/controllers/meeting/meeting.module';
@@ -49,6 +50,14 @@ import { HealthModule } from '@/api/controllers/health/health.module';
       }),
       inject: [ConfigService],
     }),
+
+    // 限流模块
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 60 秒
+        limit: 100, // 默认限制 100 次/分钟
+      },
+    ]),
 
     // 业务模块
     AuthModule,
