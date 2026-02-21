@@ -41,7 +41,7 @@ import { HealthModule } from '@/api/controllers/health/health.module';
       isGlobal: true,
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        store: redisStore,
+        store: redisStore as any,
         host: configService.get('REDIS_HOST'),
         port: configService.get<number>('REDIS_PORT'),
         password: configService.get('REDIS_PASSWORD'),

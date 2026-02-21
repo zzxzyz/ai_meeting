@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThan } from 'typeorm';
+import { Repository, LessThan, IsNull } from 'typeorm';
 import { RefreshTokenEntity } from '../entities/refresh-token.entity';
 
 /**
@@ -69,7 +69,7 @@ export class RefreshTokenRepository {
     await this.repository.update(
       {
         user_id,
-        revoked_at: null,
+        revoked_at: IsNull(),
       },
       {
         revoked_at: new Date(),
@@ -86,8 +86,8 @@ export class RefreshTokenRepository {
     return await this.repository.find({
       where: {
         user_id,
-        used_at: null,
-        revoked_at: null,
+        used_at: IsNull(),
+        revoked_at: IsNull(),
       },
     });
   }
