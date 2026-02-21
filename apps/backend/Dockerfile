@@ -4,7 +4,7 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 # 复制根目录的配置文件
-COPY package.json pnpm-lock.yaml turbo.json tsconfig.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.json ./
 COPY .npmrc* ./
 
 # 复制 packages（共享包）
