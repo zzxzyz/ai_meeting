@@ -47,8 +47,8 @@ services:
   # 后端服务
   backend:
     build:
-      context: ./apps/backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/backend/Dockerfile
     container_name: ai-meeting-backend
     restart: unless-stopped
     environment:
@@ -103,8 +103,8 @@ services:
   # 前端服务 (Nginx)
   frontend:
     build:
-      context: ./apps/web
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/web/Dockerfile
       args:
         VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
     container_name: ai-meeting-frontend
