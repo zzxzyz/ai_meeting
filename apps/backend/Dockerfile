@@ -3,20 +3,24 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# 复制 package.json 和 lock 文件
-COPY package*.json ./
-COPY pnpm-lock.yaml* ./
+# 复制根目录的配置文件
+COPY package.json pnpm-lock.yaml turbo.json tsconfig.json ./
+COPY .npmrc* ./
+
+# 复制 packages（共享包）
+COPY packages ./packages
+
+# 复制 apps/backend
+COPY apps/backend ./apps/backend
 
 # 安装 pnpm
 RUN npm install -g pnpm
 
-# 安装依赖
+# 安装所有依赖（包括 workspace 依赖）
 RUN pnpm install --frozen-lockfile
 
-# 复制源代码
-COPY . .
-
-# 构建应用
+# 构建后端
+WORKDIR /app/apps/backend
 RUN pnpm run build
 
 # 生产阶段
@@ -27,13 +31,23 @@ WORKDIR /app
 # 安装 pnpm
 RUN npm install -g pnpm
 
-# 只复制生产依赖
-COPY package*.json ./
-COPY pnpm-lock.yaml* ./
-RUN pnpm install --prod --frozen-lockfile
+# 复制根目录配置
+COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
+
+# 复制 packages（共享包）
+COPY --from=builder /app/packages ./packages
+
+# 复制 backend 的 package.json
+COPY --from=builder /app/apps/backend/package.json ./apps/backend/
+
+# 切换到 backend 目录
+WORKDIR /app/apps/backend
+
+# 安装生产依赖
+RUN cd /app && pnpm install --prod --frozen-lockfile
 
 # 从构建阶段复制编译后的代码
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/apps/backend/dist ./dist
 
 # 暴露端口
 EXPOSE 3000
