@@ -46,7 +46,7 @@ COPY --from=builder /app/apps/backend/package.json ./apps/backend/
 WORKDIR /app/apps/backend
 
 # 安装生产依赖
-RUN cd /app && pnpm install --prod --frozen-lockfile
+RUN cd /app && pnpm install --prod --frozen-lockfile --ignore-scripts
 
 # 从构建阶段复制编译后的代码
 COPY --from=builder /app/apps/backend/dist ./dist
