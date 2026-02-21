@@ -4,7 +4,7 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 # 安装构建依赖（Python、make、g++ 用于编译原生模块如 bcrypt）
-RUN apk add --no-cache python3 make g++
+RUN apk add --no-cache python3 py3-setuptools make g++
 
 # 复制根目录的配置文件
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.json ./
