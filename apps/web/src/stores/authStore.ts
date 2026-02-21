@@ -23,7 +23,7 @@ interface AuthState {
   clearError: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
+export const useAuthStore = create<AuthState>((set) => ({
   // 初始状态
   user: null,
   isAuthenticated: tokenManager.hasTokens(),
