@@ -6,10 +6,10 @@ import { AuthService } from '@/application/services/auth.service';
 import { UserRepository } from '@/infrastructure/database/repositories/user.repository';
 import { RefreshTokenRepository } from '@/infrastructure/database/repositories/refresh-token.repository';
 import { RegisterDto, LoginDto } from '@/api/dto/auth.dto';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
-// Mock bcrypt
-jest.mock('bcrypt');
+// Mock bcryptjs
+jest.mock('bcryptjs');
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -94,7 +94,7 @@ describe('AuthService', () => {
       // Arrange
       userRepository.existsByEmail.mockResolvedValue(false);
       userRepository.create.mockResolvedValue(mockUser);
-      (bcrypt.hash as jest.Mock).mockResolvedValue('hashedpassword');
+      (bcrypt.hashSync as jest.Mock).mockReturnValue('hashedpassword');
       jwtService.sign.mockReturnValue('access-token');
       refreshTokenRepository.create.mockResolvedValue({
         id: 'token-123',
@@ -115,7 +115,7 @@ describe('AuthService', () => {
       expect(userRepository.existsByEmail).toHaveBeenCalledWith(
         registerDto.email,
       );
-      expect(bcrypt.hash).toHaveBeenCalledWith(registerDto.password, 12);
+      expect(bcrypt.hashSync).toHaveBeenCalledWith(registerDto.password, 12);
       expect(userRepository.create).toHaveBeenCalledWith({
         email: registerDto.email,
         password_hash: 'hashedpassword',
@@ -154,7 +154,7 @@ describe('AuthService', () => {
     it('应该成功登录', async () => {
       // Arrange
       userRepository.findByEmail.mockResolvedValue(mockUser);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (bcrypt.compareSync as jest.Mock).mockReturnValue(true);
       jwtService.sign.mockReturnValue('access-token');
       refreshTokenRepository.create.mockResolvedValue({
         id: 'token-123',
@@ -167,7 +167,7 @@ describe('AuthService', () => {
       expect(userRepository.findByEmail).toHaveBeenCalledWith(
         loginDto.email,
       );
-      expect(bcrypt.compare).toHaveBeenCalledWith(
+      expect(bcrypt.compareSync).toHaveBeenCalledWith(
         loginDto.password,
         mockUser.password_hash,
       );
@@ -192,13 +192,13 @@ describe('AuthService', () => {
     it('密码错误时应该抛出 UnauthorizedException', async () => {
       // Arrange
       userRepository.findByEmail.mockResolvedValue(mockUser);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+      (bcrypt.compareSync as jest.Mock).mockReturnValue(false);
 
       // Act & Assert
       await expect(service.login(loginDto)).rejects.toThrow(
         UnauthorizedException,
       );
-      expect(bcrypt.compare).toHaveBeenCalledWith(
+      expect(bcrypt.compareSync).toHaveBeenCalledWith(
         loginDto.password,
         mockUser.password_hash,
       );

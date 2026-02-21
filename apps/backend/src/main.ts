@@ -9,6 +9,11 @@ import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 
 async function bootstrap() {
+  // 启动前打印数据库相关环境变量（便于排查 Docker 内 ECONNREFUSED）
+  console.log(
+    `[Startup] DATABASE_HOST=${process.env.DATABASE_HOST ?? '(not set)'} DATABASE_PORT=${process.env.DATABASE_PORT ?? '(not set)'} NODE_ENV=${process.env.NODE_ENV ?? '(not set)'}`,
+  );
+
   // 创建 Winston logger
   const logger = WinstonModule.createLogger({
     transports: [

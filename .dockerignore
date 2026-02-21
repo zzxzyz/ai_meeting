@@ -25,8 +25,11 @@ Thumbs.db
 .gitignore
 .gitattributes
 
-# Env
+# Env（禁止任何 .env 打入镜像，生产环境由 compose 传入）
 .env
+.env.*
+**/.env
+**/.env.*
 .env.local
 .env.*.local
 

@@ -18,7 +18,7 @@ export class RefreshTokenEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ length: 50 })
+  @Column({ type: 'uuid' })
   @Index()
   user_id: string;
 

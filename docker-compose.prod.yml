@@ -53,15 +53,14 @@ services:
       NODE_ENV: production
       PORT: 3000
       
-      # 数据库配置
-      DB_TYPE: postgres
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USERNAME: ${POSTGRES_USER:-postgres}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
-      DB_DATABASE: ${POSTGRES_DB:-ai_meeting}
-      DB_SYNCHRONIZE: ${DB_SYNCHRONIZE:-false}
-      DB_LOGGING: ${DB_LOGGING:-false}
+      # 数据库配置（变量名需与后端 ConfigService 一致：DATABASE_*）
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: ${POSTGRES_USER:-postgres}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      DATABASE_NAME: ${POSTGRES_DB:-ai_meeting}
+      DATABASE_SYNCHRONIZE: ${DATABASE_SYNCHRONIZE:-false}
+      DATABASE_LOGGING: ${DATABASE_LOGGING:-false}
       
       # Redis 配置
       REDIS_HOST: redis
@@ -92,7 +91,7 @@ services:
     networks:
       - ai-meeting-network
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/v1/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
       interval: 30s
       timeout: 3s
       retries: 3
@@ -113,10 +112,10 @@ services:
       - backend
     ports:
       - "8080:80"
-      - "8443:443"
-    volumes:
-      # 挂载 SSL 证书
-      - ./deploy/ssl:/etc/nginx/ssl:ro
+      # 启用 HTTPS 时取消下一行注释，并在 deploy/ssl/ 放置 cert.pem、key.pem
+      # - "8443:443"
+    # volumes:
+    #   - ./deploy/ssl:/etc/nginx/ssl:ro
     networks:
       - ai-meeting-network
     healthcheck:

@@ -11,10 +11,11 @@ import { HealthModule } from '@/api/controllers/health/health.module';
 
 @Module({
   imports: [
-    // 配置模块
+    // 配置模块（生产环境仅用容器环境变量，不加载 .env 避免覆盖 compose 传入的 DATABASE_HOST 等）
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+      ignoreEnvFile: process.env.NODE_ENV === 'production',
     }),
 
     // 数据库模块
