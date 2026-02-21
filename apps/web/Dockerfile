@@ -19,9 +19,8 @@ RUN npm install -g pnpm
 # 安装所有依赖（包括 workspace 依赖）
 RUN pnpm install --frozen-lockfile
 
-# 构建前端
-WORKDIR /app/apps/web
-RUN pnpm run build
+# 构建前端（在根目录使用 filter 构建）
+RUN pnpm --filter @ai-meeting/web build
 
 # 生产阶段 - 使用 Nginx
 FROM nginx:alpine

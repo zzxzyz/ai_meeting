@@ -19,9 +19,8 @@ RUN npm install -g pnpm
 # 安装所有依赖（包括 workspace 依赖）
 RUN pnpm install --frozen-lockfile
 
-# 构建后端
-WORKDIR /app/apps/backend
-RUN pnpm run build
+# 构建后端（在根目录使用 filter 构建）
+RUN pnpm --filter @ai-meeting/backend build
 
 # 生产阶段
 FROM node:18-alpine
