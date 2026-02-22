@@ -22,6 +22,10 @@ RUN npm install -g pnpm
 # 安装所有依赖（包括 workspace 依赖）
 RUN pnpm install --frozen-lockfile
 
+# 前端 API 地址（构建时注入，.env 被 .dockerignore 排除故必须用 build arg）
+ARG VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+
 # 构建前端（在根目录使用 filter 构建）
 RUN pnpm --filter @ai-meeting/web build
 

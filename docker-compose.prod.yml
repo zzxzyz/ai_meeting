@@ -103,7 +103,8 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
       args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+        # 前端构建时注入的 API 基地址（需含路径，如 https://域名/api/v1）
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://v.ixriver.com/api/v1}
     container_name: ai-meeting-frontend
     restart: unless-stopped
     environment:
