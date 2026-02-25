@@ -18,6 +18,9 @@ export interface ElectronAPI {
   // 平台检测
   platform: string;
   isElectron: boolean;
+
+  // 会议功能 - 系统剪贴板
+  copyToClipboard: (text: string) => Promise<void>;
 }
 
 // 暴露安全的 API 给渲染进程
@@ -34,6 +37,9 @@ const electronAPI: ElectronAPI = {
   // 平台检测
   platform: process.platform,
   isElectron: true,
+
+  // 会议功能 - 复制会议号到系统剪贴板
+  copyToClipboard: (text: string) => ipcRenderer.invoke('copy-to-clipboard', text),
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

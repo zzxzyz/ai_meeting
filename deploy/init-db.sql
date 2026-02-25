@@ -38,5 +38,44 @@ SET timezone = 'Asia/Shanghai';
 
 GRANT ALL PRIVILEGES ON DATABASE ai_meeting TO postgres;
 
+-- =============================================
+-- REQ-002: 会议管理表 DDL
+-- 版本: v0.1
+-- 创建日期: 2026-02-26
+-- =============================================
+
+-- 会议表
+CREATE TABLE IF NOT EXISTS meetings (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  meeting_number VARCHAR(9)   NOT NULL,
+  title          VARCHAR(100),
+  creator_id     UUID         NOT NULL REFERENCES users(id),
+  status         VARCHAR(20)  NOT NULL DEFAULT 'waiting',
+  started_at     TIMESTAMPTZ,
+  ended_at       TIMESTAMPTZ,
+  created_at     TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  updated_at     TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  CONSTRAINT uq_meetings_meeting_number UNIQUE (meeting_number)
+);
+
+CREATE INDEX IF NOT EXISTS idx_meetings_meeting_number ON meetings(meeting_number);
+CREATE INDEX IF NOT EXISTS idx_meetings_creator_id     ON meetings(creator_id);
+CREATE INDEX IF NOT EXISTS idx_meetings_status         ON meetings(status);
+CREATE INDEX IF NOT EXISTS idx_meetings_created_at     ON meetings(created_at DESC);
+
+-- 会议参与者表
+CREATE TABLE IF NOT EXISTS meeting_participants (
+  id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  meeting_id UUID        NOT NULL REFERENCES meetings(id) ON DELETE CASCADE,
+  user_id    UUID        NOT NULL REFERENCES users(id)    ON DELETE CASCADE,
+  joined_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  left_at    TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT uq_meeting_participants_meeting_user UNIQUE (meeting_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_meeting_participants_meeting_id ON meeting_participants(meeting_id);
+CREATE INDEX IF NOT EXISTS idx_meeting_participants_user_id    ON meeting_participants(user_id);
+
 -- 初始化完成
 SELECT 'Database initialized successfully' AS status;

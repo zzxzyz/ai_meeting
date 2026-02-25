@@ -100,3 +100,57 @@ export class RateLimitException extends BusinessException {
     );
   }
 }
+
+/**
+ * 会议不存在异常
+ */
+export class MeetingNotFoundException extends BusinessException {
+  constructor(message: string = '会议不存在，请检查会议号是否正确') {
+    super(40401, message, HttpStatus.NOT_FOUND);
+  }
+}
+
+/**
+ * 会议已结束异常（无法加入）
+ */
+export class MeetingAlreadyEndedException extends BusinessException {
+  constructor(message: string = '该会议已结束，无法加入') {
+    super(41001, message, HttpStatus.GONE);
+  }
+}
+
+/**
+ * 会议已结束异常（无法重复结束）
+ */
+export class MeetingAlreadyEndedConflictException extends BusinessException {
+  constructor(message: string = '会议已结束') {
+    super(40901, message, HttpStatus.CONFLICT);
+  }
+}
+
+/**
+ * 无权限查询会议异常
+ */
+export class MeetingForbiddenException extends BusinessException {
+  constructor(message: string = '无权限查询该会议') {
+    super(40301, message, HttpStatus.FORBIDDEN);
+  }
+}
+
+/**
+ * 非会议创建者无权结束会议异常
+ */
+export class MeetingNotCreatorException extends BusinessException {
+  constructor(message: string = '只有会议创建者可以结束会议') {
+    super(40302, message, HttpStatus.FORBIDDEN);
+  }
+}
+
+/**
+ * 会议号生成失败异常
+ */
+export class MeetingNumberGenerationFailedException extends BusinessException {
+  constructor() {
+    super(50001, '会议号生成失败，请重试', HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+}

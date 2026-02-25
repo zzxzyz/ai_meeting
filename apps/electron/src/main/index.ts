@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, screen } from 'electron';
+import { app, BrowserWindow, clipboard, ipcMain, screen } from 'electron';
 import * as path from 'path';
 
 let mainWindow: BrowserWindow | null = null;
@@ -91,5 +91,10 @@ function registerIpcHandlers() {
   // 关闭窗口
   ipcMain.handle('close-window', () => {
     mainWindow?.close();
+  });
+
+  // 复制文本到系统剪贴板（会议号复制功能）
+  ipcMain.handle('copy-to-clipboard', (_event, text: string) => {
+    clipboard.writeText(text);
   });
 }
