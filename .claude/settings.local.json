@@ -31,7 +31,16 @@
       "Bash(pnpm install:*)",
       "Bash(node_modules/.bin/jest:*)",
       "Bash(npx jest:*)",
-      "Bash(pnpm add:*)"
+      "Bash(pnpm add:*)",
+      "Bash(npx vitest:*)",
+      "Bash(cd:*)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(f''subject: {d[\"\"subject\"\"]}\\\\nstatus: {d[\"\"status\"\"]}\\\\nowner: {d.get\\(\"\"owner\"\",\"\"none\"\"\\)}''\\)\")",
+      "Bash(done)",
+      "Bash(head:*)",
+      "Bash(python3:*)",
+      "Bash(echo === Task #$id ===:*)",
+      "Bash(cd /Users/zhengjunming/Documents/mj_git/ai_meeting/apps/backend && npx tsc --noEmit 2>&1)",
+      "Bash(cd /Users/zhengjunming/Documents/mj_git/ai_meeting/apps/web && npx tsc --noEmit 2>&1)"
     ]
   }
 }

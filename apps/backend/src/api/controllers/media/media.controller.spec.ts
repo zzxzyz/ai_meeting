@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config';
 
 describe('MediaController', () => {
   let controller: MediaController;
-  let mediaService: MediaService;
+  let mediaService: jest.Mocked<MediaService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -45,7 +45,7 @@ describe('MediaController', () => {
     }).compile();
 
     controller = module.get<MediaController>(MediaController);
-    mediaService = module.get<MediaService>(MediaService);
+    mediaService = module.get<jest.Mocked<MediaService>>(MediaService);
   });
 
   it('should be defined', () => {

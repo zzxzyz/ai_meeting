@@ -4,7 +4,7 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
-  root: 'src/renderer',
+  root: '.',
   base: './',
   resolve: {
     alias: {
@@ -32,8 +32,5 @@ export default defineConfig({
     outDir: path.resolve(__dirname, 'dist/renderer'),
     emptyOutDir: true,
     sourcemap: true,
-    rollupOptions: {
-      input: path.resolve(__dirname, 'index.html'),
-    },
   },
 });

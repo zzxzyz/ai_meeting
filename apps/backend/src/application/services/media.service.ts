@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-interface IceServerConfig {
+export interface IceServerConfig {
   urls: string;
   username?: string;
   credential?: string;
 }
 
-interface MediaConfig {
+export interface MediaConfig {
   iceServers: IceServerConfig[];
 }
 

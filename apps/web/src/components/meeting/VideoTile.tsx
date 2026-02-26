@@ -8,6 +8,8 @@ interface VideoTileProps {
   isActiveSpeaker: boolean;
   isMainSpeaker: boolean;
   isPinned: boolean;
+  audioMuted: boolean;
+  videoDisabled: boolean;
   onDoubleClick?: (peer: PeerInfo) => void;
 }
 
@@ -18,6 +20,8 @@ export const VideoTile: React.FC<VideoTileProps> = ({
   isActiveSpeaker,
   isMainSpeaker,
   isPinned,
+  audioMuted,
+  videoDisabled,
   onDoubleClick
 }) => {
   const handleDoubleClick = () => {
@@ -40,12 +44,12 @@ export const VideoTile: React.FC<VideoTileProps> = ({
     >
       {/* 视频渲染区域 */}
       <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-        {hasVideo ? (
+        {hasVideo && !videoDisabled ? (
           <video
             className="w-full h-full object-cover"
             autoPlay
             playsInline
-            muted={!hasAudio}
+            muted={!hasAudio || audioMuted}
             data-peer-id={peer.peerId}
           />
         ) : (
@@ -74,12 +78,12 @@ export const VideoTile: React.FC<VideoTileProps> = ({
 
           <div className="flex items-center space-x-2">
             {/* 音频状态 */}
-            {!hasAudio && (
+            {(!hasAudio || audioMuted) && (
               <span className="text-red-400 text-sm" title="麦克风静音">🔇</span>
             )}
 
             {/* 视频状态 */}
-            {!hasVideo && (
+            {(!hasVideo || videoDisabled) && (
               <span className="text-gray-400 text-sm" title="摄像头关闭">📷✕</span>
             )}
 

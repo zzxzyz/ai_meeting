@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../hooks/useAuth';
-import { useSocket } from '../../../hooks/useSocket';
-import { MediaService } from '../../../services/media.service';
-import { SignalingService } from '../../../services/signaling.service';
-import { VideoGrid } from '../../../components/Meeting/VideoGrid';
-import { ConnectionStatus, NetworkQuality } from '../../../components/Meeting/ConnectionStatus';
-import { useToast } from '../../../hooks/useToast';
+import { useAuth } from '../../hooks/useAuth';
+import { useSocket } from '../../hooks/useSocket';
+import { MediaService } from '../../services/media.service';
+import { SignalingService } from '../../services/signaling.service';
+import { VideoGrid } from '../../components/meeting/VideoGrid';
+import type { NetworkQuality } from '../../components/meeting/VideoGrid';
+import { useToast } from '../../hooks/useToast';
 
 interface PeerInfo {
   peerId: string;
@@ -25,7 +25,7 @@ export const MeetingRoomPage: React.FC = () => {
   const { meetingId } = useParams<{ meetingId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { socket, isConnected } = useSocket();
+  const { socket } = useSocket();
   const { showToast } = useToast();
 
   // 服务实例
@@ -42,6 +42,8 @@ export const MeetingRoomPage: React.FC = () => {
   const [activeSpeakerId, setActiveSpeakerId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // 远端用户音视频控制状态
+  const [peerControlStates, setPeerControlStates] = useState<Map<string, { audioMuted: boolean; videoDisabled: boolean }>>(new Map());
 
   // 初始化服务
   useEffect(() => {
@@ -143,7 +145,7 @@ export const MeetingRoomPage: React.FC = () => {
     });
 
     // 会议结束
-    signalingServiceRef.current.on('meetingEnded', (data: { endedBy: string; endedAt: string }) => {
+    signalingServiceRef.current.on('meetingEnded', (_data: { endedBy: string; endedAt: string }) => {
       showToast('会议已结束', 'info');
       setTimeout(() => {
         navigate('/meetings');
@@ -162,6 +164,55 @@ export const MeetingRoomPage: React.FC = () => {
     // 活跃发言者变化
     signalingServiceRef.current.on('activeSpeakerChanged', (data: { peerId: string | null }) => {
       setActiveSpeakerId(data.peerId);
+    });
+
+    // 远端用户音频静音状态变化
+    signalingServiceRef.current.on('peerMuted', (data: { peerId: string }) => {
+      setPeerControlStates(prev => {
+        const next = new Map(prev);
+        const state = next.get(data.peerId) || { audioMuted: false, videoDisabled: false };
+        next.set(data.peerId, { ...state, audioMuted: true });
+        return next;
+      });
+    });
+
+    // 远端用户取消音频静音
+    signalingServiceRef.current.on('peerUnmuted', (data: { peerId: string }) => {
+      setPeerControlStates(prev => {
+        const next = new Map(prev);
+        const state = next.get(data.peerId) || { audioMuted: false, videoDisabled: false };
+        next.set(data.peerId, { ...state, audioMuted: false });
+        return next;
+      });
+    });
+
+    // 远端用户关闭视频
+    signalingServiceRef.current.on('peerVideoDisabled', (data: { peerId: string }) => {
+      setPeerControlStates(prev => {
+        const next = new Map(prev);
+        const state = next.get(data.peerId) || { audioMuted: false, videoDisabled: false };
+        next.set(data.peerId, { ...state, videoDisabled: true });
+        return next;
+      });
+    });
+
+    // 远端用户开启视频
+    signalingServiceRef.current.on('peerVideoEnabled', (data: { peerId: string }) => {
+      setPeerControlStates(prev => {
+        const next = new Map(prev);
+        const state = next.get(data.peerId) || { audioMuted: false, videoDisabled: false };
+        next.set(data.peerId, { ...state, videoDisabled: false });
+        return next;
+      });
+    });
+
+    // 房间状态同步（新用户加入时接收当前房间状态）
+    signalingServiceRef.current.on('roomState', (data: { peers: Array<{ peerId: string; audioMuted: boolean; videoDisabled: boolean }> }) => {
+      const stateMap = new Map<string, { audioMuted: boolean; videoDisabled: boolean }>();
+      data.peers.forEach(p => {
+        stateMap.set(p.peerId, { audioMuted: p.audioMuted, videoDisabled: p.videoDisabled });
+      });
+      setPeerControlStates(stateMap);
     });
   };
 
@@ -203,15 +254,23 @@ export const MeetingRoomPage: React.FC = () => {
 
   // 切换音频静音
   const handleToggleAudio = async () => {
-    if (!mediaServiceRef.current) return;
+    if (!mediaServiceRef.current || !meetingId) return;
 
     try {
       const audioProducer = mediaServiceRef.current.getAudioProducer();
       if (audioProducer) {
         if (isAudioMuted) {
           await audioProducer.resume();
+          // 通知服务端取消静音，由服务端广播给其他参与者
+          if (signalingServiceRef.current) {
+            await signalingServiceRef.current.resumeProducer(meetingId, audioProducer.id, 'audio');
+          }
         } else {
           await audioProducer.pause();
+          // 通知服务端静音，由服务端广播给其他参与者
+          if (signalingServiceRef.current) {
+            await signalingServiceRef.current.pauseProducer(meetingId, audioProducer.id, 'audio');
+          }
         }
         setIsAudioMuted(!isAudioMuted);
       }
@@ -223,15 +282,23 @@ export const MeetingRoomPage: React.FC = () => {
 
   // 切换视频开关
   const handleToggleVideo = async () => {
-    if (!mediaServiceRef.current) return;
+    if (!mediaServiceRef.current || !meetingId) return;
 
     try {
       const videoProducer = mediaServiceRef.current.getVideoProducer();
       if (videoProducer) {
         if (isVideoOff) {
           await videoProducer.resume();
+          // 通知服务端开启视频，由服务端广播给其他参与者
+          if (signalingServiceRef.current) {
+            await signalingServiceRef.current.resumeProducer(meetingId, videoProducer.id, 'video');
+          }
         } else {
           await videoProducer.pause();
+          // 通知服务端关闭视频，由服务端广播给其他参与者
+          if (signalingServiceRef.current) {
+            await signalingServiceRef.current.pauseProducer(meetingId, videoProducer.id, 'video');
+          }
         }
         setIsVideoOff(!isVideoOff);
       }
@@ -324,12 +391,13 @@ export const MeetingRoomPage: React.FC = () => {
     <div className="h-screen bg-gray-900">
       <VideoGrid
         peers={peers}
-        localStream={localStream}
+        localStream={localStream ?? undefined}
         isAudioMuted={isAudioMuted}
         isVideoOff={isVideoOff}
         connectionStatus={connectionStatus}
         networkQuality={networkQuality}
         activeSpeakerId={activeSpeakerId}
+        peerControlStates={peerControlStates}
         onEndCall={handleEndCall}
         onToggleAudio={handleToggleAudio}
         onToggleVideo={handleToggleVideo}

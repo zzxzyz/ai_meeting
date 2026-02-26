@@ -2,8 +2,8 @@ import React, { useRef, useEffect } from 'react';
 
 interface LocalVideoProps {
   stream?: MediaStream;
-  isMuted: boolean;
-  isCameraOff: boolean;
+  audioMuted: boolean;
+  videoEnabled: boolean;
   isMainSpeaker: boolean;
   isPinned: boolean;
   onDoubleClick?: () => void;
@@ -11,8 +11,8 @@ interface LocalVideoProps {
 
 export const LocalVideo: React.FC<LocalVideoProps> = ({
   stream,
-  isMuted,
-  isCameraOff,
+  audioMuted,
+  videoEnabled,
   isMainSpeaker,
   isPinned,
   onDoubleClick
@@ -44,7 +44,7 @@ export const LocalVideo: React.FC<LocalVideoProps> = ({
     >
       {/* 视频渲染区域 */}
       <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-        {stream && !isCameraOff ? (
+        {stream && videoEnabled ? (
           <video
             ref={videoRef}
             className="w-full h-full object-cover"
@@ -76,12 +76,12 @@ export const LocalVideo: React.FC<LocalVideoProps> = ({
 
           <div className="flex items-center space-x-2">
             {/* 音频状态 */}
-            {isMuted && (
+            {audioMuted && (
               <span className="text-red-400 text-sm" title="麦克风静音" data-testid="muted">🔇</span>
             )}
 
             {/* 视频状态 */}
-            {isCameraOff && (
+            {!videoEnabled && (
               <span className="text-gray-400 text-sm" title="摄像头关闭" data-testid="camera-off">📷✕</span>
             )}
 
@@ -93,12 +93,12 @@ export const LocalVideo: React.FC<LocalVideoProps> = ({
 
       {/* 状态指示器 */}
       <div className="absolute top-2 left-2 flex items-center space-x-2">
-        {isMuted && (
+        {audioMuted && (
           <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
             静音
           </span>
         )}
-        {isCameraOff && (
+        {!videoEnabled && (
           <span className="bg-gray-600 text-white text-xs px-2 py-1 rounded-full">
             摄像头关闭
           </span>

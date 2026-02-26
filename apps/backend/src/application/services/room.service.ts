@@ -12,6 +12,12 @@ export interface PeerInfo {
   recvTransportId?: string;
   producers: Map<string, mediasoup.types.Producer>;
   consumers: Map<string, mediasoup.types.Consumer>;
+  // 新增控制状态字段
+  audioPaused?: boolean;
+  videoPaused?: boolean;
+  audioDeviceId?: string;
+  videoDeviceId?: string;
+  lastUpdated?: Date;
 }
 
 export interface RoomInfo {
@@ -178,7 +184,6 @@ export class RoomService {
       enableTcp: true,
       preferUdp: true,
       initialAvailableOutgoingBitrate: this.configService.get<number>('MEDIASOUP_INITIAL_BITRATE') || 1000000,
-      minimumAvailableOutgoingBitrate: 600000,
     });
 
     room.transports.set(transport.id, transport);
@@ -355,5 +360,98 @@ export class RoomService {
       consumerCount,
       transportCount: room.transports.size,
     };
+  }
+
+  /**
+   * 获取指定 Peer 信息
+   */
+  getPeer(meetingId: string, peerId: string): PeerInfo | undefined {
+    const room = this.getRoom(meetingId);
+    if (!room) {
+      return undefined;
+    }
+    return room.peers.get(peerId);
+  }
+
+  /**
+   * 更新 Peer 控制状态
+   */
+  async updatePeerState(
+    meetingId: string,
+    peerId: string,
+    updates: Partial<PeerInfo>,
+  ): Promise<void> {
+    const room = this.getRoom(meetingId);
+    if (!room) {
+      throw new Error('Room not found');
+    }
+
+    const peer = room.peers.get(peerId);
+    if (!peer) {
+      throw new Error('Peer not found');
+    }
+
+    Object.assign(peer, updates, { lastUpdated: new Date() });
+  }
+
+  /**
+   * 获取房间内所有 Peer 的控制状态
+   */
+  getRoomControlState(meetingId: string): Array<{
+    peerId: string;
+    audioMuted: boolean;
+    videoDisabled: boolean;
+    lastUpdated: Date;
+  }> {
+    const room = this.getRoom(meetingId);
+    if (!room) {
+      return [];
+    }
+
+    return Array.from(room.peers.values()).map(peer => ({
+      peerId: peer.peerId,
+      audioMuted: peer.audioPaused || false,
+      videoDisabled: peer.videoPaused || false,
+      lastUpdated: peer.lastUpdated || new Date(),
+    }));
+  }
+
+  /**
+   * 设置音频静音状态
+   */
+  async setPeerAudioMuted(meetingId: string, peerId: string, muted: boolean): Promise<void> {
+    return this.updatePeerState(meetingId, peerId, { audioPaused: muted });
+  }
+
+  /**
+   * 设置视频禁用状态
+   */
+  async setPeerVideoDisabled(meetingId: string, peerId: string, disabled: boolean): Promise<void> {
+    return this.updatePeerState(meetingId, peerId, { videoPaused: disabled });
+  }
+
+  /**
+   * 获取指定 Producer 信息
+   */
+  getProducer(meetingId: string, peerId: string, producerId: string): mediasoup.types.Producer | undefined {
+    const peer = this.getPeer(meetingId, peerId);
+    if (!peer) {
+      return undefined;
+    }
+    return peer.producers.get(producerId);
+  }
+
+  /**
+   * 查找指定类型的 Producer
+   */
+  findProducerByKind(meetingId: string, peerId: string, kind: 'audio' | 'video'): mediasoup.types.Producer | undefined {
+    const peer = this.getPeer(meetingId, peerId);
+    if (!peer) {
+      return undefined;
+    }
+
+    return Array.from(peer.producers.values()).find(
+      producer => producer.kind === kind
+    );
   }
 }

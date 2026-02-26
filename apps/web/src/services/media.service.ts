@@ -249,10 +249,10 @@ export class MediaService {
         this.videoProducer = await this.sendTransport.produce({
           track: videoTrack,
           encodings: [
-            { rid: 'r0', maxBitrate: 100000, scalabilityMode: 'S1T3' }, // 低清
-            { rid: 'r1', maxBitrate: 300000, scalabilityMode: 'S1T3' }, // 标清
-            { rid: 'r2', maxBitrate: 1500000, scalabilityMode: 'S1T3' } // 高清
-          ],
+            { rid: 'r0', scalabilityMode: 'S1T3' } as any, // 低清
+            { rid: 'r1', scalabilityMode: 'S1T3' } as any, // 标清
+            { rid: 'r2', scalabilityMode: 'S1T3' } as any  // 高清
+          ] as any,
           codecOptions: {
             videoGoogleStartBitrate: 1000
           }
@@ -268,7 +268,7 @@ export class MediaService {
   /**
    * 订阅远端流
    */
-  async consumeRemoteStream(producerId: string, peerId: string): Promise<Consumer> {
+  async consumeRemoteStream(producerId: string, _peerId: string): Promise<Consumer> {
     if (!this.recvTransport) {
       throw new Error('Receive transport not initialized');
     }

@@ -22,6 +22,7 @@ const mockRouter = {
     ],
   },
   close: jest.fn(),
+  createWebRtcTransport: jest.fn(),
 };
 
 const mockTransport = {

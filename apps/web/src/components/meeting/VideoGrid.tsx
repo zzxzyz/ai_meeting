@@ -37,6 +37,9 @@ export interface VideoGridProps {
   // 活跃发言者
   activeSpeakerId?: string | null;
 
+  // 远端用户控制状态（由服务端广播）
+  peerControlStates?: Map<string, { audioMuted: boolean; videoDisabled: boolean }>;
+
   // 事件处理
   onEndCall: () => void;
   onToggleAudio: () => void;
@@ -61,6 +64,7 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
   connectionStatus,
   networkQuality,
   activeSpeakerId,
+  peerControlStates,
   onEndCall,
   onToggleAudio,
   onToggleVideo,
@@ -108,8 +112,10 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
 
   // 渲染单个视频格
   const renderVideoTile = (peer: PeerInfo, isMainSpeaker: boolean = false) => {
-    const hasVideo = peer.producers.some(p => p.kind === 'video');
-    const hasAudio = peer.producers.some(p => p.kind === 'audio');
+    const controlState = peerControlStates?.get(peer.peerId);
+    // 若服务端广播了控制状态，优先使用；否则根据 Producer 列表判断
+    const hasVideo = controlState ? !controlState.videoDisabled : peer.producers.some(p => p.kind === 'video');
+    const hasAudio = controlState ? !controlState.audioMuted : peer.producers.some(p => p.kind === 'audio');
     const isActiveSpeaker = activeSpeakerId === peer.peerId;
 
     return (
@@ -118,6 +124,8 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
         peer={peer}
         hasVideo={hasVideo}
         hasAudio={hasAudio}
+        audioMuted={controlState?.audioMuted ?? false}
+        videoDisabled={controlState?.videoDisabled ?? false}
         isActiveSpeaker={isActiveSpeaker}
         isMainSpeaker={isMainSpeaker}
         isPinned={pinnedSpeakerId === peer.peerId}
@@ -134,8 +142,8 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
       <LocalVideo
         key="local"
         stream={localStream}
-        isMuted={isAudioMuted}
-        isCameraOff={isVideoOff}
+        audioMuted={isAudioMuted}
+        videoEnabled={!isVideoOff}
         isMainSpeaker={isMainSpeaker}
         isPinned={pinnedSpeakerId === 'local'}
         onDoubleClick={() => {
@@ -208,7 +216,7 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
 
   // 4+人布局：自适应网格
   const renderGridLayout = () => {
-    const allParticipants = [...peers, { peerId: 'local', nickname: '我', producers: [] } as PeerInfo];
+    const allParticipants = [...peers, { peerId: 'local', userId: 'local', nickname: '我', producers: [] } as PeerInfo];
 
     // 计算网格列数
     const getGridCols = () => {

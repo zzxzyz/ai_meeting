@@ -97,6 +97,51 @@ export interface PeerLeftPayload {
   userId: string;
 }
 
+export interface ProducerPauseRequest {
+  meetingId: string;
+  producerId: string;
+  kind: 'audio' | 'video';
+  requestId?: string;
+}
+
+export interface ProducerResumeRequest {
+  meetingId: string;
+  producerId: string;
+  kind: 'audio' | 'video';
+  requestId?: string;
+}
+
+export interface ControlAckResponse {
+  requestId?: string;
+  success: boolean;
+  producerId: string;
+  paused: boolean;
+  timestamp: number;
+  error?: string;
+}
+
+export interface PeerMutedPayload {
+  peerId: string;
+  muted: boolean;
+  timestamp: number;
+}
+
+export interface PeerVideoDisabledPayload {
+  peerId: string;
+  disabled: boolean;
+  timestamp: number;
+}
+
+export interface RoomStatePayload {
+  meetingId: string;
+  peers: Array<{
+    peerId: string;
+    audioMuted: boolean;
+    videoDisabled: boolean;
+  }>;
+  timestamp: number;
+}
+
 /**
  * 会议 WebSocket Gateway
  * 负责向会议房间内的参与者推送实时事件和 RTC 信令处理
@@ -435,5 +480,398 @@ export class MeetingGateway implements OnGatewayConnection, OnGatewayDisconnect 
     const room = `meeting:${meetingId}`;
     this.server.to(room).emit('rtc:peerLeft', payload);
     this.logger.log(`广播 Peer 离开事件到房间 ${room}: ${payload.peerId}`);
+  }
+
+  /**
+   * RTC: 暂停 Producer（静音/关闭摄像头）
+   */
+  @SubscribeMessage('rtc:producerPause')
+  async handleProducerPause(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: ProducerPauseRequest,
+  ): Promise<ControlAckResponse> {
+    try {
+      const clientInfo = this.clientPeerMap.get(client.id);
+      if (!clientInfo) {
+        throw new Error('Client not joined any room');
+      }
+
+      if (clientInfo.meetingId !== data.meetingId) {
+        throw new Error('Client not in the specified meeting');
+      }
+
+      const room = this.roomService.getRoom(data.meetingId);
+      if (!room) {
+        throw new Error('Room not found');
+      }
+
+      const peer = room.peers.get(clientInfo.peerId);
+      if (!peer) {
+        throw new Error('Peer not found');
+      }
+
+      const producer = peer.producers.get(data.producerId);
+      if (!producer) {
+        throw new Error('Producer not found');
+      }
+
+      if (producer.paused) {
+        throw new Error('Producer already paused');
+      }
+
+      // 暂停 Producer
+      await producer.pause();
+
+      // 更新 Peer 状态
+      if (data.kind === 'audio') {
+        await this.roomService.setPeerAudioMuted(data.meetingId, clientInfo.peerId, true);
+      } else {
+        await this.roomService.setPeerVideoDisabled(data.meetingId, clientInfo.peerId, true);
+      }
+
+      // 广播状态变化
+      await this.broadcastControlStateChange(data.meetingId, clientInfo.peerId, data.kind, true);
+
+      this.logger.log(`Producer ${data.producerId} paused by peer ${clientInfo.peerId}`);
+
+      return {
+        requestId: data.requestId,
+        success: true,
+        producerId: data.producerId,
+        paused: true,
+        timestamp: Date.now(),
+      };
+
+    } catch (error) {
+      const errMsg = (error as Error).message;
+      this.logger.error(`Producer pause failed: ${errMsg}`);
+      return {
+        requestId: data.requestId,
+        success: false,
+        producerId: data.producerId,
+        paused: false,
+        timestamp: Date.now(),
+        error: errMsg,
+      };
+    }
+  }
+
+  /**
+   * RTC: 恢复 Producer（取消静音/开启摄像头）
+   */
+  @SubscribeMessage('rtc:producerResume')
+  async handleProducerResume(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: ProducerResumeRequest,
+  ): Promise<ControlAckResponse> {
+    try {
+      const clientInfo = this.clientPeerMap.get(client.id);
+      if (!clientInfo) {
+        throw new Error('Client not joined any room');
+      }
+
+      if (clientInfo.meetingId !== data.meetingId) {
+        throw new Error('Client not in the specified meeting');
+      }
+
+      const room = this.roomService.getRoom(data.meetingId);
+      if (!room) {
+        throw new Error('Room not found');
+      }
+
+      const peer = room.peers.get(clientInfo.peerId);
+      if (!peer) {
+        throw new Error('Peer not found');
+      }
+
+      const producer = peer.producers.get(data.producerId);
+      if (!producer) {
+        throw new Error('Producer not found');
+      }
+
+      if (!producer.paused) {
+        throw new Error('Producer not paused');
+      }
+
+      // 恢复 Producer
+      await producer.resume();
+
+      // 更新 Peer 状态
+      if (data.kind === 'audio') {
+        await this.roomService.setPeerAudioMuted(data.meetingId, clientInfo.peerId, false);
+      } else {
+        await this.roomService.setPeerVideoDisabled(data.meetingId, clientInfo.peerId, false);
+      }
+
+      // 广播状态变化
+      await this.broadcastControlStateChange(data.meetingId, clientInfo.peerId, data.kind, false);
+
+      this.logger.log(`Producer ${data.producerId} resumed by peer ${clientInfo.peerId}`);
+
+      return {
+        requestId: data.requestId,
+        success: true,
+        producerId: data.producerId,
+        paused: false,
+        timestamp: Date.now(),
+      };
+
+    } catch (error) {
+      const errMsg = (error as Error).message;
+      this.logger.error(`Producer resume failed: ${errMsg}`);
+      return {
+        requestId: data.requestId,
+        success: false,
+        producerId: data.producerId,
+        paused: false,
+        timestamp: Date.now(),
+        error: errMsg,
+      };
+    }
+  }
+
+  /**
+   * RTC: 获取房间状态（新用户加入时同步）
+   */
+  @SubscribeMessage('rtc:getRoomState')
+  async handleGetRoomState(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { meetingId: string },
+  ): Promise<RoomStatePayload> {
+    const clientInfo = this.clientPeerMap.get(client.id);
+    if (!clientInfo) {
+      throw new Error('Client not joined any room');
+    }
+
+    const room = this.roomService.getRoom(data.meetingId);
+    if (!room) {
+      return {
+        meetingId: data.meetingId,
+        peers: [],
+        timestamp: Date.now(),
+      };
+    }
+
+    const peers = Array.from(room.peers.values()).map(peer => ({
+      peerId: peer.peerId,
+      audioMuted: peer.audioPaused || false,
+      videoDisabled: peer.videoPaused || false,
+    }));
+
+    return {
+      meetingId: data.meetingId,
+      peers,
+      timestamp: Date.now(),
+    };
+  }
+
+  /**
+   * 便捷方法：静音音频
+   */
+  @SubscribeMessage('rtc:muteAudio')
+  async handleMuteAudio(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { meetingId: string },
+  ): Promise<ControlAckResponse> {
+    const clientInfo = this.clientPeerMap.get(client.id);
+    if (!clientInfo) {
+      throw new Error('Client not joined any room');
+    }
+
+    const room = this.roomService.getRoom(data.meetingId);
+    if (!room) {
+      throw new Error('Room not found');
+    }
+
+    const peer = room.peers.get(clientInfo.peerId);
+    if (!peer) {
+      throw new Error('Peer not found');
+    }
+
+    // 查找音频 Producer
+    const audioProducer = Array.from(peer.producers.values()).find(
+      producer => producer.kind === 'audio'
+    );
+
+    if (!audioProducer) {
+      throw new Error('Audio producer not found');
+    }
+
+    return this.handleProducerPause(client, {
+      meetingId: data.meetingId,
+      producerId: audioProducer.id,
+      kind: 'audio',
+      requestId: `mute-${Date.now()}`,
+    });
+  }
+
+  /**
+   * 便捷方法：取消静音音频
+   */
+  @SubscribeMessage('rtc:unmuteAudio')
+  async handleUnmuteAudio(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { meetingId: string },
+  ): Promise<ControlAckResponse> {
+    const clientInfo = this.clientPeerMap.get(client.id);
+    if (!clientInfo) {
+      throw new Error('Client not joined any room');
+    }
+
+    const room = this.roomService.getRoom(data.meetingId);
+    if (!room) {
+      throw new Error('Room not found');
+    }
+
+    const peer = room.peers.get(clientInfo.peerId);
+    if (!peer) {
+      throw new Error('Peer not found');
+    }
+
+    // 查找音频 Producer
+    const audioProducer = Array.from(peer.producers.values()).find(
+      producer => producer.kind === 'audio'
+    );
+
+    if (!audioProducer) {
+      throw new Error('Audio producer not found');
+    }
+
+    return this.handleProducerResume(client, {
+      meetingId: data.meetingId,
+      producerId: audioProducer.id,
+      kind: 'audio',
+      requestId: `unmute-${Date.now()}`,
+    });
+  }
+
+  /**
+   * 便捷方法：禁用视频
+   */
+  @SubscribeMessage('rtc:disableVideo')
+  async handleDisableVideo(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { meetingId: string },
+  ): Promise<ControlAckResponse> {
+    const clientInfo = this.clientPeerMap.get(client.id);
+    if (!clientInfo) {
+      throw new Error('Client not joined any room');
+    }
+
+    const room = this.roomService.getRoom(data.meetingId);
+    if (!room) {
+      throw new Error('Room not found');
+    }
+
+    const peer = room.peers.get(clientInfo.peerId);
+    if (!peer) {
+      throw new Error('Peer not found');
+    }
+
+    // 查找视频 Producer
+    const videoProducer = Array.from(peer.producers.values()).find(
+      producer => producer.kind === 'video'
+    );
+
+    if (!videoProducer) {
+      throw new Error('Video producer not found');
+    }
+
+    return this.handleProducerPause(client, {
+      meetingId: data.meetingId,
+      producerId: videoProducer.id,
+      kind: 'video',
+      requestId: `disable-video-${Date.now()}`,
+    });
+  }
+
+  /**
+   * 便捷方法：启用视频
+   */
+  @SubscribeMessage('rtc:enableVideo')
+  async handleEnableVideo(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { meetingId: string },
+  ): Promise<ControlAckResponse> {
+    const clientInfo = this.clientPeerMap.get(client.id);
+    if (!clientInfo) {
+      throw new Error('Client not joined any room');
+    }
+
+    const room = this.roomService.getRoom(data.meetingId);
+    if (!room) {
+      throw new Error('Room not found');
+    }
+
+    const peer = room.peers.get(clientInfo.peerId);
+    if (!peer) {
+      throw new Error('Peer not found');
+    }
+
+    // 查找视频 Producer
+    const videoProducer = Array.from(peer.producers.values()).find(
+      producer => producer.kind === 'video'
+    );
+
+    if (!videoProducer) {
+      throw new Error('Video producer not found');
+    }
+
+    return this.handleProducerResume(client, {
+      meetingId: data.meetingId,
+      producerId: videoProducer.id,
+      kind: 'video',
+      requestId: `enable-video-${Date.now()}`,
+    });
+  }
+
+  /**
+   * 广播控制状态变化
+   */
+  private async broadcastControlStateChange(
+    meetingId: string,
+    peerId: string,
+    kind: 'audio' | 'video',
+    paused: boolean,
+  ): Promise<void> {
+    const room = `meeting:${meetingId}`;
+
+    if (kind === 'audio') {
+      const payload: PeerMutedPayload = {
+        peerId,
+        muted: paused,
+        timestamp: Date.now(),
+      };
+      this.server.to(room).emit('rtc:peerMuted', payload);
+      this.logger.log(`广播音频静音状态变化: peer=${peerId}, muted=${paused}`);
+    } else {
+      const payload: PeerVideoDisabledPayload = {
+        peerId,
+        disabled: paused,
+        timestamp: Date.now(),
+      };
+      this.server.to(room).emit('rtc:peerVideoDisabled', payload);
+      this.logger.log(`广播视频禁用状态变化: peer=${peerId}, disabled=${paused}`);
+    }
+  }
+
+  /**
+   * 新用户加入时自动同步房间状态
+   */
+  async syncRoomStateToNewPeer(meetingId: string, peerId: string): Promise<void> {
+    const roomState = await this.handleGetRoomState(null as any, { meetingId });
+
+    // 查找 peerId 对应的 socketId
+    let targetSocketId: string | undefined;
+    for (const [socketId, info] of this.clientPeerMap.entries()) {
+      if (info.peerId === peerId && info.meetingId === meetingId) {
+        targetSocketId = socketId;
+        break;
+      }
+    }
+
+    if (targetSocketId) {
+      this.server.to(targetSocketId).emit('rtc:roomState', roomState);
+    }
   }
 }

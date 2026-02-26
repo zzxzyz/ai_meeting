@@ -54,7 +54,14 @@ export type SignalingEvent =
   | 'producerClosed'
   | 'peerJoined'
   | 'peerLeft'
-  | 'meetingEnded';
+  | 'meetingEnded'
+  | 'networkQualityChanged'
+  | 'activeSpeakerChanged'
+  | 'peerMuted'
+  | 'peerUnmuted'
+  | 'peerVideoDisabled'
+  | 'peerVideoEnabled'
+  | 'roomState';
 
 export class SignalingService {
   private socket: Socket;
@@ -76,7 +83,7 @@ export class SignalingService {
    * 获取路由器 RTP 能力
    */
   async getRouterRtpCapabilities(meetingId: string): Promise<RtpCapabilities> {
-    const response = await this.sendRequest('rtc:getRouterRtpCapabilities', { meetingId });
+    const response = await this.sendRequest<{ rtpCapabilities: RtpCapabilities }>('rtc:getRouterRtpCapabilities', { meetingId });
     return response.rtpCapabilities;
   }
 
@@ -112,7 +119,7 @@ export class SignalingService {
     rtpParameters: RtpParameters,
     appData?: any
   ): Promise<string> {
-    const response = await this.sendRequest('rtc:produce', {
+    const response = await this.sendRequest<{ producerId: string }>('rtc:produce', {
       meetingId,
       transportId,
       kind,
@@ -152,6 +159,45 @@ export class SignalingService {
    */
   async leaveMeeting(meetingId: string): Promise<void> {
     return this.sendRequest('rtc:leave', { meetingId });
+  }
+
+  /**
+   * 暂停 Producer（静音/关闭摄像头）
+   */
+  async pauseProducer(meetingId: string, producerId: string, kind: 'audio' | 'video'): Promise<void> {
+    return this.sendRequest('rtc:producerPause', {
+      meetingId,
+      producerId,
+      kind
+    });
+  }
+
+  /**
+   * 恢复 Producer（取消静音/开启摄像头）
+   */
+  async resumeProducer(meetingId: string, producerId: string, kind: 'audio' | 'video'): Promise<void> {
+    return this.sendRequest('rtc:producerResume', {
+      meetingId,
+      producerId,
+      kind
+    });
+  }
+
+  /**
+   * 切换设备
+   */
+  async switchDevice(
+    meetingId: string,
+    kind: 'audio' | 'video',
+    oldDeviceId: string,
+    newDeviceId: string
+  ): Promise<void> {
+    return this.sendRequest('rtc:deviceSwitch', {
+      meetingId,
+      kind,
+      oldDeviceId,
+      newDeviceId
+    });
   }
 
   /**
@@ -230,6 +276,27 @@ export class SignalingService {
     this.socket.on('rtc:meetingEnded', (data: any) => {
       this.emitEvent('meetingEnded', data);
     });
+
+    // 音视频控制事件
+    this.socket.on('rtc:peerMuted', (data: any) => {
+      this.emitEvent('peerMuted', data);
+    });
+
+    this.socket.on('rtc:peerUnmuted', (data: any) => {
+      this.emitEvent('peerUnmuted', data);
+    });
+
+    this.socket.on('rtc:peerVideoDisabled', (data: any) => {
+      this.emitEvent('peerVideoDisabled', data);
+    });
+
+    this.socket.on('rtc:peerVideoEnabled', (data: any) => {
+      this.emitEvent('peerVideoEnabled', data);
+    });
+
+    this.socket.on('rtc:roomState', (data: any) => {
+      this.emitEvent('roomState', data);
+    });
   }
 
   /**
@@ -241,6 +308,13 @@ export class SignalingService {
     this.socket.off('rtc:peerJoined', this.emitEvent.bind(this, 'peerJoined'));
     this.socket.off('rtc:peerLeft', this.emitEvent.bind(this, 'peerLeft'));
     this.socket.off('rtc:meetingEnded', this.emitEvent.bind(this, 'meetingEnded'));
+
+    // 移除控制事件监听器
+    this.socket.off('rtc:peerMuted', this.emitEvent.bind(this, 'peerMuted'));
+    this.socket.off('rtc:peerUnmuted', this.emitEvent.bind(this, 'peerUnmuted'));
+    this.socket.off('rtc:peerVideoDisabled', this.emitEvent.bind(this, 'peerVideoDisabled'));
+    this.socket.off('rtc:peerVideoEnabled', this.emitEvent.bind(this, 'peerVideoEnabled'));
+    this.socket.off('rtc:roomState', this.emitEvent.bind(this, 'roomState'));
   }
 
   /**

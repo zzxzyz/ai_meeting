@@ -1,11 +1,10 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as mediasoup from 'mediasoup';
-import { Worker } from 'mediasoup/lib/types';
 
 @Injectable()
 export class MediasoupService implements OnModuleDestroy {
-  private workers: Worker[] = [];
+  private workers: mediasoup.types.Worker[] = [];
   private workerIndex = 0;
 
   constructor(private readonly configService: ConfigService) {}
@@ -18,7 +17,7 @@ export class MediasoupService implements OnModuleDestroy {
 
     for (let i = 0; i < workerNum; i++) {
       const worker = await mediasoup.createWorker({
-        logLevel: this.configService.get<string>('MEDIASOUP_LOG_LEVEL') || 'warn',
+        logLevel: (this.configService.get<string>('MEDIASOUP_LOG_LEVEL') || 'warn') as mediasoup.types.WorkerLogLevel,
         logTags: ['info', 'ice', 'dtls', 'rtp', 'srtp', 'rtcp'],
         rtcMinPort: this.configService.get<number>('MEDIASOUP_RTC_MIN_PORT') || 40000,
         rtcMaxPort: this.configService.get<number>('MEDIASOUP_RTC_MAX_PORT') || 49999,
@@ -36,7 +35,7 @@ export class MediasoupService implements OnModuleDestroy {
   /**
    * 获取下一个可用的 Worker（轮询策略）
    */
-  getNextWorker(): Worker {
+  getNextWorker(): mediasoup.types.Worker {
     if (this.workers.length === 0) {
       throw new Error('No mediasoup workers available');
     }
@@ -52,7 +51,7 @@ export class MediasoupService implements OnModuleDestroy {
   async createRouter(): Promise<mediasoup.types.Router> {
     const worker = this.getNextWorker();
 
-    const mediaCodecs: mediasoup.types.RtpCodecCapability[] = [
+    const mediaCodecs: mediasoup.types.RouterRtpCodecCapability[] = [
       {
         kind: 'audio',
         mimeType: 'audio/opus',

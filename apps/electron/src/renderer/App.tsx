@@ -5,6 +5,8 @@ import { Login } from '@web/pages/Login';
 import { Register } from '@web/pages/Register';
 import { PrivateRoute } from '@web/components/PrivateRoute';
 import { useAuth } from '@web/hooks/useAuth';
+// REQ-004 音视频控制演示页面
+import { MediaControlDemo } from './pages/MediaControlDemo';
 
 // 会议管理页面（Web 端实现后复用）
 // 当 Web 端完成 REQ-002 实现时，取消注释以下导入：
@@ -17,6 +19,7 @@ function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/media-demo" element={<MediaControlDemo />} />
       <Route
         path="/"
         element={
