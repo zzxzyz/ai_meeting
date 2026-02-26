@@ -21,6 +21,16 @@ export interface ElectronAPI {
 
   // 会议功能 - 系统剪贴板
   copyToClipboard: (text: string) => Promise<void>;
+
+  // 音视频功能 - 媒体设备枚举
+  getMediaDevices: () => Promise<{
+    audioInputs: Array<{ deviceId: string; label: string; kind: string }>;
+    videoInputs: Array<{ deviceId: string; label: string; kind: string }>;
+    audioOutputs: Array<{ deviceId: string; label: string; kind: string }>;
+  }>;
+
+  // 音视频功能 - 权限请求
+  requestMediaPermission: (permissionType: 'camera' | 'microphone' | 'screen') => Promise<{ granted: boolean }>;
 }
 
 // 暴露安全的 API 给渲染进程
@@ -40,6 +50,13 @@ const electronAPI: ElectronAPI = {
 
   // 会议功能 - 复制会议号到系统剪贴板
   copyToClipboard: (text: string) => ipcRenderer.invoke('copy-to-clipboard', text),
+
+  // 音视频功能 - 媒体设备枚举
+  getMediaDevices: () => ipcRenderer.invoke('get-media-devices'),
+
+  // 音视频功能 - 权限请求
+  requestMediaPermission: (permissionType: 'camera' | 'microphone' | 'screen') =>
+    ipcRenderer.invoke('request-media-permission', permissionType),
 };
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

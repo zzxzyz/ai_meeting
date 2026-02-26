@@ -52,7 +52,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      
+
       # 数据库配置（变量名需与后端 ConfigService 一致：DATABASE_*）
       DATABASE_HOST: postgres
       DATABASE_PORT: 5432
@@ -61,25 +61,36 @@ services:
       DATABASE_NAME: ${POSTGRES_DB:-ai_meeting}
       DATABASE_SYNCHRONIZE: ${DATABASE_SYNCHRONIZE:-false}
       DATABASE_LOGGING: ${DATABASE_LOGGING:-false}
-      
+
       # Redis 配置
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-changeme}
-      
+
       # JWT 配置
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1h}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-your-super-secret-refresh-key-change-in-production}
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
-      
+
       # API 限流
       THROTTLE_TTL: ${THROTTLE_TTL:-60}
       THROTTLE_LIMIT: ${THROTTLE_LIMIT:-10}
-      
+
       # CORS 配置
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
-      
+
+      # mediasoup 配置（REQ-003 新增）
+      MEDIASOUP_WORKER_NUM: ${MEDIASOUP_WORKER_NUM:-1}
+      MEDIASOUP_LOG_LEVEL: ${MEDIASOUP_LOG_LEVEL:-warn}
+      MEDIASOUP_RTC_MIN_PORT: ${MEDIASOUP_RTC_MIN_PORT:-40000}
+      MEDIASOUP_RTC_MAX_PORT: ${MEDIASOUP_RTC_MAX_PORT:-49999}
+      MEDIASOUP_STUN_SERVERS: ${MEDIASOUP_STUN_SERVERS:-stun:stun.l.google.com:19302,stun:stun1.l.google.com:19302}
+      MEDIASOUP_TURN_SERVER: ${MEDIASOUP_TURN_SERVER:-}
+      MEDIASOUP_TURN_USERNAME: ${MEDIASOUP_TURN_USERNAME:-}
+      MEDIASOUP_TURN_PASSWORD: ${MEDIASOUP_TURN_PASSWORD:-}
+      MEDIASOUP_ANNOUNCED_IP: ${MEDIASOUP_ANNOUNCED_IP:-}
+
       TZ: Asia/Shanghai
     depends_on:
       postgres:
@@ -88,6 +99,7 @@ services:
         condition: service_healthy
     ports:
       - "3000:3000"
+      - "40000-49999:40000-49999/udp"  # mediasoup RTP 端口范围（REQ-003 新增）
     networks:
       - ai-meeting-network
     healthcheck:

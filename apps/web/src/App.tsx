@@ -6,6 +6,7 @@ import { useAuth } from './hooks/useAuth';
 import { HomePage } from './pages/Home/index';
 import { MeetingListPage } from './pages/MeetingList/index';
 import { MeetingDetailPage } from './pages/MeetingDetail/index';
+import { MeetingRoomPage } from './pages/MeetingRoom/index';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Route index element={<HomePage />} />
         <Route path="meetings" element={<MeetingListPage />} />
         <Route path="meetings/:id" element={<MeetingDetailPage />} />
+        <Route path="meetings/:meetingId/room" element={<MeetingRoomPage />} />
       </Route>
     </Routes>
   );
@@ -72,6 +74,7 @@ function MainLayout() {
             <Route index element={<HomePage />} />
             <Route path="meetings" element={<MeetingListPage />} />
             <Route path="meetings/:id" element={<MeetingDetailPage />} />
+            <Route path="meetings/:meetingId/room" element={<MeetingRoomPage />} />
           </Routes>
         </div>
       </main>
