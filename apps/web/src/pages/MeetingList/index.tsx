@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMeetingStore } from '../../stores/meetingStore';
-import { MeetingCard } from '../../components/Meeting/MeetingCard';
+import { MeetingCard } from '../../components/meeting/MeetingCard';
 import { Meeting } from '../../api/meeting';
 
 type TabType = 'created' | 'joined';
@@ -84,7 +84,7 @@ export const MeetingListPage: React.FC = () => {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
             <p className="text-sm text-gray-400">加载中...</p>
           </div>
-        ) : meetings.length === 0 ? (
+        ) : (meetings ?? []).length === 0 ? (
           <div className="p-8 text-center">
             <div className="text-4xl mb-3">📋</div>
             <p className="text-gray-600 mb-1">暂无会议记录</p>
@@ -104,7 +104,7 @@ export const MeetingListPage: React.FC = () => {
           </div>
         ) : (
           <div>
-            {meetings.map((meeting) => (
+            {(meetings ?? []).map((meeting) => (
               <MeetingCard
                 key={meeting.id}
                 meeting={meeting}

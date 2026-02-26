@@ -39,11 +39,20 @@ class TokenManager {
   }
 
   setAccessToken(token: string): void {
+    if (token == null || token === '' || token === 'undefined') {
+      this.clearTokens();
+      return;
+    }
     this.accessToken = token;
     localStorage.setItem('access_token', token);
   }
 
   setRefreshToken(token: string): void {
+    if (token == null || token === '' || token === 'undefined') {
+      this.refreshToken = null;
+      localStorage.removeItem('refresh_token');
+      return;
+    }
     this.refreshToken = token;
     localStorage.setItem('refresh_token', token);
   }
@@ -73,11 +82,12 @@ const createApiClient = (): AxiosInstance => {
     },
   });
 
-  // 请求拦截器 - 自动添加 Authorization 头
+  // 请求拦截器 - 自动添加 Authorization 头（避免误存 undefined 导致 Bearer undefined）
   client.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
       const token = tokenManager.getAccessToken();
-      if (token && config.headers) {
+      const validToken = typeof token === 'string' && token.length > 0 && token !== 'undefined';
+      if (validToken && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
       }
       return config;

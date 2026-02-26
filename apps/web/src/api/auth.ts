@@ -1,4 +1,4 @@
-import { api } from './client';
+import { api, type ApiResponse } from './client';
 
 // 用户信息类型
 export interface User {
@@ -54,11 +54,24 @@ export interface RefreshTokenResponse {
 }
 
 /**
+ * 从可能被全局拦截器二次包装的响应中取出实际 data 载荷
+ * 后端 Controller 返回 { code, message, data } 后，TransformInterceptor 会再包一层，
+ * 导致实际 body 为 { code, message, data: { code, message, data: 实际载荷 } }
+ */
+function unwrapData<T>(response: ApiResponse<T> | T): T {
+  const r = response as ApiResponse<unknown>;
+  if (r?.data && typeof r.data === 'object' && (r.data as Record<string, unknown>)?.data !== undefined) {
+    return (r.data as Record<string, T>).data;
+  }
+  return ((r as ApiResponse<T>)?.data ?? response) as T;
+}
+
+/**
  * 用户注册
  */
 export const register = async (data: RegisterRequest): Promise<RegisterResponse> => {
   const response = await api.post<RegisterResponse>('/auth/register', data);
-  return response.data;
+  return unwrapData(response) as RegisterResponse;
 };
 
 /**
@@ -66,7 +79,7 @@ export const register = async (data: RegisterRequest): Promise<RegisterResponse>
  */
 export const login = async (data: LoginRequest): Promise<LoginResponse> => {
   const response = await api.post<LoginResponse>('/auth/login', data);
-  return response.data;
+  return unwrapData(response) as LoginResponse;
 };
 
 /**
@@ -74,7 +87,7 @@ export const login = async (data: LoginRequest): Promise<LoginResponse> => {
  */
 export const refreshToken = async (refreshToken: string): Promise<RefreshTokenResponse> => {
   const response = await api.post<RefreshTokenResponse>('/auth/refresh', { refreshToken });
-  return response.data;
+  return unwrapData(response) as RefreshTokenResponse;
 };
 
 /**
@@ -89,5 +102,5 @@ export const logout = async (refreshToken: string): Promise<void> => {
  */
 export const getCurrentUser = async (): Promise<User> => {
   const response = await api.get<User>('/users/me');
-  return response.data;
+  return unwrapData(response) as User;
 };

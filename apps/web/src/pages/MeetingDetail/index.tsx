@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useMeetingStore } from '../../stores/meetingStore';
 import { useAuth } from '../../hooks/useAuth';
-import { MeetingStatusBadge } from '../../components/Meeting/MeetingStatusBadge';
-import { EndMeetingModal } from '../../components/Meeting/EndMeetingModal';
+import { MeetingStatusBadge } from '../../components/meeting/MeetingStatusBadge';
+import { EndMeetingModal } from '../../components/meeting/EndMeetingModal';
 import { MeetingStatus, formatMeetingNumber } from '../../api/meeting';
 
 /**

@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useMeetingStore } from '../../stores/meetingStore';
-import { CreateMeetingModal } from '../../components/Meeting/CreateMeetingModal';
-import { JoinMeetingInput } from '../../components/Meeting/JoinMeetingInput';
-import { MeetingCard } from '../../components/Meeting/MeetingCard';
+import { CreateMeetingModal } from '../../components/meeting/CreateMeetingModal';
+import { JoinMeetingInput } from '../../components/meeting/JoinMeetingInput';
+import { MeetingCard } from '../../components/meeting/MeetingCard';
 import { Meeting } from '../../api/meeting';
 
 /**
@@ -81,7 +81,7 @@ export const HomePage: React.FC = () => {
           <div className="w-full max-w-xs">
             <JoinMeetingInput
               value={joinMeetingNumber}
-              onChange={(val) => {
+              onChange={(val: string) => {
                 setJoinMeetingNumber(val);
                 setJoinError(null);
               }}
@@ -118,13 +118,13 @@ export const HomePage: React.FC = () => {
           <div className="p-6 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
           </div>
-        ) : meetings.length === 0 ? (
+        ) : (meetings ?? []).length === 0 ? (
           <div className="p-6 text-center text-gray-500 text-sm">
             暂无会议记录
           </div>
         ) : (
           <div>
-            {meetings.map((meeting) => (
+            {(meetings ?? []).map((meeting) => (
               <MeetingCard
                 key={meeting.id}
                 meeting={meeting}

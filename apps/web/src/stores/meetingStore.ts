@@ -39,7 +39,7 @@ interface MeetingState {
   endMeeting: (meetingId: string) => Promise<void>;
 }
 
-export const useMeetingStore = create<MeetingState>((set, get) => ({
+export const useMeetingStore = create<MeetingState>((set) => ({
   // 初始状态
   meetings: [],
   currentMeeting: null,
@@ -72,7 +72,7 @@ export const useMeetingStore = create<MeetingState>((set, get) => ({
     try {
       const meeting = await createMeeting(data);
       set((state) => ({
-        meetings: [meeting, ...state.meetings],
+        meetings: [meeting, ...(state.meetings ?? [])],
         isCreating: false,
       }));
       return meeting;
@@ -103,7 +103,7 @@ export const useMeetingStore = create<MeetingState>((set, get) => ({
     try {
       const listData = await getMeetings(params);
       set({
-        meetings: listData.items,
+        meetings: listData?.items ?? [],
         meetingListData: listData,
         isLoading: false,
       });
@@ -134,7 +134,7 @@ export const useMeetingStore = create<MeetingState>((set, get) => ({
       await endMeeting(meetingId);
       // 更新本地会议状态
       set((state) => ({
-        meetings: state.meetings.map((m) =>
+        meetings: (state.meetings ?? []).map((m) =>
           m.id === meetingId ? { ...m, status: MeetingStatus.ENDED } : m
         ),
         currentMeeting: state.currentMeeting?.id === meetingId
