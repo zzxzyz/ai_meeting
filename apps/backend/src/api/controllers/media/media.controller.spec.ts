@@ -76,7 +76,7 @@ describe('MediaController', () => {
     });
 
     it('should handle meeting not found error', async () => {
-      mediaService.getMediaConfig.mockRejectedValueOnce(new Error('Meeting not found'));
+      (mediaService.getMediaConfig as jest.Mock).mockRejectedValueOnce(new Error('Meeting not found'));
 
       const meetingId = 'non-existent-meeting';
 
@@ -84,7 +84,7 @@ describe('MediaController', () => {
     });
 
     it('should handle unauthorized access error', async () => {
-      mediaService.getMediaConfig.mockRejectedValueOnce(new Error('Unauthorized access'));
+      (mediaService.getMediaConfig as jest.Mock).mockRejectedValueOnce(new Error('Unauthorized access'));
 
       const meetingId = 'meeting-001';
 

@@ -2,7 +2,7 @@ import React from 'react';
 
 export type ConnectionStatusType = 'connecting' | 'connected' | 'disconnected' | 'failed';
 
-interface ConnectionStatusProps {
+export interface ConnectionStatusProps {
   status: ConnectionStatusType;
   message?: string;
 }

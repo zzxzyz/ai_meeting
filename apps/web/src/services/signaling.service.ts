@@ -2,7 +2,7 @@ import type {
   RtpCapabilities,
   RtpParameters,
   DtlsParameters
-} from 'mediasoup-client/lib/types';
+} from 'mediasoup-client/types';
 
 interface Socket {
   emit: (event: string, data: any, callback?: (response: any) => void) => void;
@@ -54,7 +54,9 @@ export type SignalingEvent =
   | 'producerClosed'
   | 'peerJoined'
   | 'peerLeft'
-  | 'meetingEnded';
+  | 'meetingEnded'
+  | 'networkQualityChanged'
+  | 'activeSpeakerChanged';
 
 export class SignalingService {
   private socket: Socket;
@@ -76,7 +78,7 @@ export class SignalingService {
    * 获取路由器 RTP 能力
    */
   async getRouterRtpCapabilities(meetingId: string): Promise<RtpCapabilities> {
-    const response = await this.sendRequest('rtc:getRouterRtpCapabilities', { meetingId });
+    const response = await this.sendRequest<{ rtpCapabilities: RtpCapabilities }>('rtc:getRouterRtpCapabilities', { meetingId });
     return response.rtpCapabilities;
   }
 
@@ -112,7 +114,7 @@ export class SignalingService {
     rtpParameters: RtpParameters,
     appData?: any
   ): Promise<string> {
-    const response = await this.sendRequest('rtc:produce', {
+    const response = await this.sendRequest<{ producerId: string }>('rtc:produce', {
       meetingId,
       transportId,
       kind,
@@ -194,7 +196,7 @@ export class SignalingService {
         if (response.error) {
           reject(new Error(response.error));
         } else if (response.data) {
-          resolve(response.data);
+          resolve(response.data as T);
         } else {
           reject(new Error(`No data received from ${event}`));
         }
@@ -230,6 +232,16 @@ export class SignalingService {
     this.socket.on('rtc:meetingEnded', (data: any) => {
       this.emitEvent('meetingEnded', data);
     });
+
+    // 网络质量变化
+    this.socket.on('rtc:networkQualityChanged', (data: any) => {
+      this.emitEvent('networkQualityChanged', data);
+    });
+
+    // 活跃发言者变化
+    this.socket.on('rtc:activeSpeakerChanged', (data: any) => {
+      this.emitEvent('activeSpeakerChanged', data);
+    });
   }
 
   /**
@@ -241,6 +253,8 @@ export class SignalingService {
     this.socket.off('rtc:peerJoined', this.emitEvent.bind(this, 'peerJoined'));
     this.socket.off('rtc:peerLeft', this.emitEvent.bind(this, 'peerLeft'));
     this.socket.off('rtc:meetingEnded', this.emitEvent.bind(this, 'meetingEnded'));
+    this.socket.off('rtc:networkQualityChanged', this.emitEvent.bind(this, 'networkQualityChanged'));
+    this.socket.off('rtc:activeSpeakerChanged', this.emitEvent.bind(this, 'activeSpeakerChanged'));
   }
 
   /**

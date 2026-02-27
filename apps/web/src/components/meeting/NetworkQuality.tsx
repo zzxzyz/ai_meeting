@@ -2,7 +2,7 @@ import React from 'react';
 
 export type NetworkQualityType = 'excellent' | 'good' | 'fair' | 'poor' | 'bad';
 
-interface NetworkQualityProps {
+export interface NetworkQualityProps {
   quality: NetworkQualityType;
   showDetails?: boolean;
 }

@@ -178,7 +178,6 @@ export class RoomService {
       enableTcp: true,
       preferUdp: true,
       initialAvailableOutgoingBitrate: this.configService.get<number>('MEDIASOUP_INITIAL_BITRATE') || 1000000,
-      minimumAvailableOutgoingBitrate: 600000,
     });
 
     room.transports.set(transport.id, transport);

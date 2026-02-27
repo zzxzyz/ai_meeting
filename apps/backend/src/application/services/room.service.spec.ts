@@ -3,8 +3,13 @@ import { RoomService } from './room.service';
 import { MediasoupService } from '@/infrastructure/mediasoup/mediasoup.service';
 import { ConfigService } from '@nestjs/config';
 
-// Mock mediasoup types
-const mockRouter = {
+// Mock mediasoup types (createWebRtcTransport 由测试中按需赋值)
+const mockRouter: {
+  id: string;
+  rtpCapabilities: { codecs: Array<{ kind: string; mimeType: string; clockRate: number; channels?: number }> };
+  close: jest.Mock;
+  createWebRtcTransport?: jest.Mock;
+} = {
   id: 'router-001',
   rtpCapabilities: {
     codecs: [

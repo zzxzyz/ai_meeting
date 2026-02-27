@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../hooks/useAuth';
-import { useSocket } from '../../../hooks/useSocket';
-import { MediaService } from '../../../services/media.service';
-import { SignalingService } from '../../../services/signaling.service';
-import { VideoGrid } from '../../../components/Meeting/VideoGrid';
-import { ConnectionStatus, NetworkQuality } from '../../../components/Meeting/ConnectionStatus';
-import { useToast } from '../../../hooks/useToast';
+import { useAuth } from '../../hooks/useAuth';
+import { useSocket } from '../../hooks/useSocket';
+import { MediaService } from '../../services/media.service';
+import { SignalingService } from '../../services/signaling.service';
+import { VideoGrid } from '../../components/meeting';
+import type { NetworkQualityLevel } from '../../components/meeting';
+import { useToast } from '../../hooks/useToast';
 
 interface PeerInfo {
   peerId: string;
@@ -25,7 +25,7 @@ export const MeetingRoomPage: React.FC = () => {
   const { meetingId } = useParams<{ meetingId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { socket, isConnected } = useSocket();
+  const { socket } = useSocket();
   const { showToast } = useToast();
 
   // 服务实例
@@ -143,7 +143,7 @@ export const MeetingRoomPage: React.FC = () => {
     });
 
     // 会议结束
-    signalingServiceRef.current.on('meetingEnded', (data: { endedBy: string; endedAt: string }) => {
+    signalingServiceRef.current.on('meetingEnded', (_data: { endedBy: string; endedAt: string }) => {
       showToast('会议已结束', 'info');
       setTimeout(() => {
         navigate('/meetings');
@@ -151,7 +151,7 @@ export const MeetingRoomPage: React.FC = () => {
     });
 
     // 网络质量变化
-    signalingServiceRef.current.on('networkQualityChanged', (data: { quality: NetworkQuality }) => {
+    signalingServiceRef.current.on('networkQualityChanged', (data: { quality: NetworkQualityLevel }) => {
       setNetworkQuality(data.quality);
 
       if (data.quality === 'poor' || data.quality === 'bad') {
@@ -324,7 +324,7 @@ export const MeetingRoomPage: React.FC = () => {
     <div className="h-screen bg-gray-900">
       <VideoGrid
         peers={peers}
-        localStream={localStream}
+        localStream={localStream ?? undefined}
         isAudioMuted={isAudioMuted}
         isVideoOff={isVideoOff}
         connectionStatus={connectionStatus}

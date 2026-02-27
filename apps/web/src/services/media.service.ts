@@ -6,7 +6,7 @@ import type {
   RtpCapabilities,
   RtpParameters,
   DtlsParameters
-} from 'mediasoup-client/lib/types';
+} from 'mediasoup-client/types';
 
 interface Socket {
   emit: (event: string, data: any, callback?: (response: any) => void) => void;
@@ -137,7 +137,11 @@ export class MediaService {
    */
   private setupTransportEventHandlers(transport: Transport, direction: 'send' | 'recv'): void {
     // Connect 事件（DTLS 握手）
-    transport.on('connect', async ({ dtlsParameters }, callback, errback) => {
+    transport.on('connect', async (
+      { dtlsParameters }: { dtlsParameters: DtlsParameters },
+      callback: () => void,
+      errback: (err: Error) => void
+    ) => {
       try {
         await this.connectTransport(transport.id, dtlsParameters);
         callback();
@@ -148,7 +152,11 @@ export class MediaService {
 
     // Produce 事件（仅发送 Transport）
     if (direction === 'send') {
-      transport.on('produce', async ({ kind, rtpParameters, appData }, callback, errback) => {
+      transport.on('produce', async (
+        { kind, rtpParameters, appData }: { kind: 'audio' | 'video'; rtpParameters: RtpParameters; appData?: any },
+        callback: (params: { id: string }) => void,
+        errback: (err: Error) => void
+      ) => {
         try {
           const producerId = await this.produce(transport.id, kind, rtpParameters, appData);
           callback({ id: producerId });
@@ -268,7 +276,7 @@ export class MediaService {
   /**
    * 订阅远端流
    */
-  async consumeRemoteStream(producerId: string, peerId: string): Promise<Consumer> {
+  async consumeRemoteStream(producerId: string, _peerId: string): Promise<Consumer> {
     if (!this.recvTransport) {
       throw new Error('Receive transport not initialized');
     }

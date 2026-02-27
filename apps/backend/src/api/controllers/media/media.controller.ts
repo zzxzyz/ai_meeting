@@ -1,7 +1,7 @@
 import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { MediaService } from '@/application/services/media.service';
+import { MediaConfig, MediaService } from '@/application/services/media.service';
 
 @ApiTags('媒体配置')
 @Controller('api/meetings/:meetingId/media-config')
@@ -78,7 +78,7 @@ export class MediaController {
       },
     },
   })
-  async getMediaConfig(@Param('meetingId') meetingId: string) {
+  async getMediaConfig(@Param('meetingId') meetingId: string): Promise<{ code: number; message: string; data: MediaConfig }> {
     const mediaConfig = await this.mediaService.getMediaConfig(meetingId);
 
     return {

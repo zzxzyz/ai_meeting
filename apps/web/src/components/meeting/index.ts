@@ -1,6 +1,6 @@
 // 主组件导出
 export { VideoGrid } from './VideoGrid';
-export type { PeerInfo, ProducerInfo, ConnectionStatus, NetworkQuality } from './VideoGrid';
+export type { PeerInfo, ProducerInfo, ConnectionStatusState, NetworkQualityLevel, VideoGridProps } from './VideoGrid';
 
 // 辅助组件导出
 export { VideoTile } from './VideoTile';
@@ -9,8 +9,7 @@ export { ConnectionStatus } from './ConnectionStatus';
 export { NetworkQuality } from './NetworkQuality';
 export { ControlBar } from './ControlBar';
 
-// 类型导出
-export type { VideoGridProps } from './VideoGrid';
+// 类型导出（组件 Props）
 export type { VideoTileProps } from './VideoTile';
 export type { LocalVideoProps } from './LocalVideo';
 export type { ConnectionStatusProps, ConnectionStatusType } from './ConnectionStatus';

@@ -1,6 +1,6 @@
 import React from 'react';
 
-interface ControlBarProps {
+export interface ControlBarProps {
   onEndCall: () => void;
   onToggleAudio: () => void;
   onToggleVideo: () => void;

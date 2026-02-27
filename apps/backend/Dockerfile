@@ -1,5 +1,5 @@
-# 多阶段构建 - 构建阶段
-FROM node:18-alpine AS builder
+# 多阶段构建 - 构建阶段（使用 Debian 以支持 mediasoup 预编译 worker，Alpine/musl 不兼容）
+FROM node:18-bookworm-slim AS builder
 
 WORKDIR /app
 
@@ -26,8 +26,8 @@ RUN cd /app/apps/backend && pnpm run build
 # 验证构建产物存在，避免运行时 MODULE_NOT_FOUND（Nest 输出为 dist/src/main.js）
 RUN test -f /app/apps/backend/dist/src/main.js || (echo "Error: dist/src/main.js not found after build" && ls -la /app/apps/backend/dist/ && exit 1)
 
-# 生产阶段
-FROM node:18-alpine
+# 生产阶段（与构建阶段一致使用 Debian，保证 mediasoup worker 可运行）
+FROM node:18-bookworm-slim
 
 WORKDIR /app
 
@@ -45,6 +45,9 @@ COPY --from=builder /app/apps/backend/package.json ./apps/backend/
 
 # 安装生产依赖（--ignore-scripts 避免根目录 prepare/husky 在无 dev 依赖时报错）
 RUN cd /app && pnpm install --prod --frozen-lockfile --ignore-scripts
+
+# 从构建阶段复制 mediasoup worker 二进制（postinstall 被 --ignore-scripts 跳过，需单独带入）
+COPY --from=builder /app/node_modules/.pnpm/mediasoup@3.19.17/node_modules/mediasoup/worker /app/node_modules/.pnpm/mediasoup@3.19.17/node_modules/mediasoup/worker
 
 # 切换到 backend 目录
 WORKDIR /app/apps/backend

@@ -7,7 +7,7 @@ interface IceServerConfig {
   credential?: string;
 }
 
-interface MediaConfig {
+export interface MediaConfig {
   iceServers: IceServerConfig[];
 }
 

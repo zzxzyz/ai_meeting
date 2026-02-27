@@ -18,8 +18,8 @@ export interface ProducerInfo {
   appData?: any;
 }
 
-export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'failed';
-export type NetworkQuality = 'excellent' | 'good' | 'fair' | 'poor' | 'bad';
+export type ConnectionStatusState = 'connecting' | 'connected' | 'disconnected' | 'failed';
+export type NetworkQualityLevel = 'excellent' | 'good' | 'fair' | 'poor' | 'bad';
 
 export interface VideoGridProps {
   // 参与者信息
@@ -31,8 +31,8 @@ export interface VideoGridProps {
   isVideoOff: boolean;
 
   // 连接状态
-  connectionStatus: ConnectionStatus;
-  networkQuality: NetworkQuality;
+  connectionStatus: ConnectionStatusState;
+  networkQuality: NetworkQualityLevel;
 
   // 活跃发言者
   activeSpeakerId?: string | null;
@@ -208,7 +208,7 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
 
   // 4+人布局：自适应网格
   const renderGridLayout = () => {
-    const allParticipants = [...peers, { peerId: 'local', nickname: '我', producers: [] } as PeerInfo];
+    const allParticipants = [...peers, { peerId: 'local', userId: 'local', nickname: '我', producers: [] }];
 
     // 计算网格列数
     const getGridCols = () => {

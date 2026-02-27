@@ -1,7 +1,7 @@
 import React from 'react';
 import { PeerInfo } from './VideoGrid';
 
-interface VideoTileProps {
+export interface VideoTileProps {
   peer: PeerInfo;
   hasVideo: boolean;
   hasAudio: boolean;

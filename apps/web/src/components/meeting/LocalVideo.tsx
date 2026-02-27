@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 
-interface LocalVideoProps {
+export interface LocalVideoProps {
   stream?: MediaStream;
   isMuted: boolean;
   isCameraOff: boolean;
