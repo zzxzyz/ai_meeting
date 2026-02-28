@@ -3,9 +3,6 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# 安装构建依赖（确保所有原生模块都能编译）
-RUN apk add --no-cache python3 py3-setuptools make g++
-
 # 复制根目录的配置文件
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.json ./
 COPY .npmrc* ./
