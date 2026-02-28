@@ -19,9 +19,8 @@ RUN npm install -g pnpm
 # 安装所有依赖（包括 workspace 依赖）
 RUN pnpm install --frozen-lockfile
 
-# 先构建 shared 包，再在 backend 目录下构建（确保 dist 输出到 apps/backend/dist）
-RUN pnpm --filter @ai-meeting/shared build
-RUN cd /app/apps/backend && pnpm run build
+# 构建后端（turbo 自动处理 shared 依赖顺序）
+RUN pnpm turbo run build --filter=@ai-meeting/backend...
 
 # 验证构建产物存在，避免运行时 MODULE_NOT_FOUND（Nest 输出为 dist/src/main.js）
 RUN test -f /app/apps/backend/dist/src/main.js || (echo "Error: dist/src/main.js not found after build" && ls -la /app/apps/backend/dist/ && exit 1)

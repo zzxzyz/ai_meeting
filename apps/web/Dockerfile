@@ -23,8 +23,8 @@ RUN pnpm install --frozen-lockfile
 ARG VITE_API_BASE_URL
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
-# 构建前端（在根目录使用 filter 构建）
-RUN pnpm --filter @ai-meeting/web build
+# 构建前端（turbo 自动处理 shared 依赖顺序）
+RUN pnpm turbo run build --filter=@ai-meeting/web...
 
 # 生产阶段 - 使用 Nginx
 FROM nginx:alpine
