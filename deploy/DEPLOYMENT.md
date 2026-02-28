@@ -122,7 +122,7 @@ bash deploy/scripts/deploy.sh
 
 ```bash
 # 查看所有容器状态
-docker-compose -f docker-compose.prod.yml ps
+docker-compose --env-file .env.production -f docker-compose.prod.yml ps
 
 # 应该看到以下容器运行中:
 # - ai-meeting-postgres (PostgreSQL)
@@ -135,11 +135,11 @@ docker-compose -f docker-compose.prod.yml ps
 
 ```bash
 # 查看所有服务日志
-docker-compose -f docker-compose.prod.yml logs -f
+docker-compose --env-file .env.production -f docker-compose.prod.yml logs -f
 
 # 查看特定服务日志
-docker-compose -f docker-compose.prod.yml logs -f backend
-docker-compose -f docker-compose.prod.yml logs -f frontend
+docker-compose --env-file .env.production -f docker-compose.prod.yml logs -f backend
+docker-compose --env-file .env.production -f docker-compose.prod.yml logs -f frontend
 ```
 
 #### 3.3 健康检查
@@ -168,59 +168,59 @@ curl http://localhost/health
 
 ### 启动服务
 ```bash
-docker-compose -f docker-compose.prod.yml up -d
+docker-compose --env-file .env.production -f docker-compose.prod.yml up -d
 ```
 
 ### 停止服务
 ```bash
-docker-compose -f docker-compose.prod.yml down
+docker-compose --env-file .env.production -f docker-compose.prod.yml down
 ```
 
 ### 重启服务
 ```bash
-docker-compose -f docker-compose.prod.yml restart
+docker-compose --env-file .env.production -f docker-compose.prod.yml restart
 ```
 
 ### 重启单个服务
 ```bash
-docker-compose -f docker-compose.prod.yml restart backend
-docker-compose -f docker-compose.prod.yml restart frontend
+docker-compose --env-file .env.production -f docker-compose.prod.yml restart backend
+docker-compose --env-file .env.production -f docker-compose.prod.yml restart frontend
 ```
 
 ### 查看日志
 ```bash
 # 实时查看所有日志
-docker-compose -f docker-compose.prod.yml logs -f
+docker-compose --env-file .env.production -f docker-compose.prod.yml logs -f
 
 # 查看最近 100 行日志
-docker-compose -f docker-compose.prod.yml logs --tail=100
+docker-compose --env-file .env.production -f docker-compose.prod.yml logs --tail=100
 
 # 查看特定服务日志
-docker-compose -f docker-compose.prod.yml logs -f backend
+docker-compose --env-file .env.production -f docker-compose.prod.yml logs -f backend
 ```
 
 ### 进入容器
 ```bash
 # 进入后端容器
-docker-compose -f docker-compose.prod.yml exec backend sh
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec backend sh
 
 # 进入数据库容器
-docker-compose -f docker-compose.prod.yml exec postgres psql -U postgres -d ai_meeting
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec postgres psql -U postgres -d ai_meeting
 ```
 
 ### 数据库操作
 ```bash
 # 运行迁移
-docker-compose -f docker-compose.prod.yml exec backend npm run migration:run
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec backend npm run migration:run
 
 # 回滚迁移
-docker-compose -f docker-compose.prod.yml exec backend npm run migration:revert
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec backend npm run migration:revert
 
 # 数据库备份
-docker-compose -f docker-compose.prod.yml exec postgres pg_dump -U postgres ai_meeting > backup_$(date +%Y%m%d_%H%M%S).sql
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec postgres pg_dump -U postgres ai_meeting > backup_$(date +%Y%m%d_%H%M%S).sql
 
 # 数据库恢复
-docker-compose -f docker-compose.prod.yml exec -T postgres psql -U postgres ai_meeting < backup.sql
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec -T postgres psql -U postgres ai_meeting < backup.sql
 ```
 
 ### 更新应用
@@ -229,22 +229,22 @@ docker-compose -f docker-compose.prod.yml exec -T postgres psql -U postgres ai_m
 git pull origin main
 
 # 2. 重新构建镜像
-docker-compose -f docker-compose.prod.yml build --no-cache
+docker-compose --env-file .env.production -f docker-compose.prod.yml build --no-cache
 
 # 3. 重启服务
-docker-compose -f docker-compose.prod.yml up -d
+docker-compose --env-file .env.production -f docker-compose.prod.yml up -d
 
 # 4. 运行数据库迁移
-docker-compose -f docker-compose.prod.yml exec backend npm run migration:run
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec backend npm run migration:run
 ```
 
 ### 清理
 ```bash
 # 停止并删除容器、网络
-docker-compose -f docker-compose.prod.yml down
+docker-compose --env-file .env.production -f docker-compose.prod.yml down
 
 # 同时删除数据卷 (⚠️ 会丢失数据)
-docker-compose -f docker-compose.prod.yml down -v
+docker-compose --env-file .env.production -f docker-compose.prod.yml down -v
 
 # 清理未使用的 Docker 资源
 docker system prune -a
@@ -294,8 +294,8 @@ openssl rand -base64 32
 ### 5. 定期更新
 ```bash
 # 更新 Docker 镜像
-docker-compose -f docker-compose.prod.yml pull
-docker-compose -f docker-compose.prod.yml up -d
+docker-compose --env-file .env.production -f docker-compose.prod.yml pull
+docker-compose --env-file .env.production -f docker-compose.prod.yml up -d
 ```
 
 ---
@@ -360,7 +360,7 @@ crontab -e
 ### 问题 1: 容器无法启动
 ```bash
 # 查看容器日志
-docker-compose -f docker-compose.prod.yml logs backend
+docker-compose --env-file .env.production -f docker-compose.prod.yml logs backend
 
 # 检查端口占用
 netstat -tlnp | grep :3000
@@ -369,22 +369,22 @@ netstat -tlnp | grep :3000
 ### 问题 2: 数据库连接失败
 ```bash
 # 检查数据库容器状态
-docker-compose -f docker-compose.prod.yml ps postgres
+docker-compose --env-file .env.production -f docker-compose.prod.yml ps postgres
 
 # 检查数据库健康状态
-docker-compose -f docker-compose.prod.yml exec postgres pg_isready
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec postgres pg_isready
 
 # 测试数据库连接
-docker-compose -f docker-compose.prod.yml exec postgres psql -U postgres -d ai_meeting -c "SELECT 1"
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec postgres psql -U postgres -d ai_meeting -c "SELECT 1"
 ```
 
 ### 问题 3: 前端无法访问后端
 ```bash
 # 检查 Nginx 配置
-docker-compose -f docker-compose.prod.yml exec frontend nginx -t
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec frontend nginx -t
 
 # 查看 Nginx 日志
-docker-compose -f docker-compose.prod.yml logs frontend
+docker-compose --env-file .env.production -f docker-compose.prod.yml logs frontend
 ```
 
 ### 问题 4: SSL 证书问题
@@ -404,8 +404,8 @@ openssl x509 -in deploy/ssl/cert.pem -text -noout
 ## 📞 支持
 
 如遇到问题，请提供以下信息:
-1. 错误日志: `docker-compose -f docker-compose.prod.yml logs`
-2. 容器状态: `docker-compose -f docker-compose.prod.yml ps`
+1. 错误日志: `docker-compose --env-file .env.production -f docker-compose.prod.yml logs`
+2. 容器状态: `docker-compose --env-file .env.production -f docker-compose.prod.yml ps`
 3. 系统信息: `uname -a && docker version`
 
 ---

@@ -126,7 +126,7 @@ chmod +x deploy.sh
 
 ```bash
 cd /root/ai_meeting
-docker-compose -f docker-compose.prod.yml ps
+docker-compose --env-file .env.production -f docker-compose.prod.yml ps
 ```
 
 应该看到 4 个容器都是 **Up** 状态：
@@ -139,16 +139,16 @@ docker-compose -f docker-compose.prod.yml ps
 
 ```bash
 # 查看所有服务日志
-docker-compose -f docker-compose.prod.yml logs
+docker-compose --env-file .env.production -f docker-compose.prod.yml logs
 
 # 查看后端日志
-docker-compose -f docker-compose.prod.yml logs backend
+docker-compose --env-file .env.production -f docker-compose.prod.yml logs backend
 
 # 查看前端日志
-docker-compose -f docker-compose.prod.yml logs frontend
+docker-compose --env-file .env.production -f docker-compose.prod.yml logs frontend
 
 # 实时查看日志
-docker-compose -f docker-compose.prod.yml logs -f
+docker-compose --env-file .env.production -f docker-compose.prod.yml logs -f
 ```
 
 ### 测试访问
@@ -171,7 +171,7 @@ curl -k https://YOUR_SERVER_IP/api/health
 
 ```bash
 # 查看详细错误
-docker-compose -f docker-compose.prod.yml logs backend
+docker-compose --env-file .env.production -f docker-compose.prod.yml logs backend
 
 # 常见原因：
 # - 环境变量配置错误
@@ -183,20 +183,20 @@ docker-compose -f docker-compose.prod.yml logs backend
 
 ```bash
 # 检查 PostgreSQL 容器
-docker-compose -f docker-compose.prod.yml exec postgres psql -U postgres -d ai_meeting -c "\dt"
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec postgres psql -U postgres -d ai_meeting -c "\dt"
 
 # 检查环境变量
-docker-compose -f docker-compose.prod.yml exec backend env | grep DB_
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec backend env | grep DB_
 ```
 
 ### 问题3：前端无法访问后端
 
 ```bash
 # 检查 Nginx 配置
-docker-compose -f docker-compose.prod.yml exec frontend cat /etc/nginx/conf.d/default.conf
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec frontend cat /etc/nginx/conf.d/default.conf
 
 # 检查后端是否可访问
-docker-compose -f docker-compose.prod.yml exec frontend wget -O- http://backend:3000/api/health
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec frontend wget -O- http://backend:3000/api/health
 ```
 
 ### 问题4：SSL 证书错误
@@ -216,23 +216,23 @@ ls -lh /root/ai_meeting/deploy/ssl/
 
 ```bash
 cd /root/ai_meeting
-docker-compose -f docker-compose.prod.yml start
+docker-compose --env-file .env.production -f docker-compose.prod.yml start
 ```
 
 ### 停止服务
 
 ```bash
-docker-compose -f docker-compose.prod.yml stop
+docker-compose --env-file .env.production -f docker-compose.prod.yml stop
 ```
 
 ### 重启服务
 
 ```bash
 # 重启所有服务
-docker-compose -f docker-compose.prod.yml restart
+docker-compose --env-file .env.production -f docker-compose.prod.yml restart
 
 # 只重启后端
-docker-compose -f docker-compose.prod.yml restart backend
+docker-compose --env-file .env.production -f docker-compose.prod.yml restart backend
 ```
 
 ### 更新代码
@@ -242,12 +242,12 @@ docker-compose -f docker-compose.prod.yml restart backend
 
 # 2. 重新构建并启动
 cd /root/ai_meeting
-docker-compose -f docker-compose.prod.yml down
-docker-compose -f docker-compose.prod.yml build --no-cache
-docker-compose -f docker-compose.prod.yml up -d
+docker-compose --env-file .env.production -f docker-compose.prod.yml down
+docker-compose --env-file .env.production -f docker-compose.prod.yml build --no-cache
+docker-compose --env-file .env.production -f docker-compose.prod.yml up -d
 
 # 3. 运行数据库迁移
-docker-compose -f docker-compose.prod.yml exec backend npm run migration:run
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec backend npm run migration:run
 ```
 
 ### 查看资源使用
@@ -260,17 +260,17 @@ docker stats
 
 ```bash
 # 备份
-docker-compose -f docker-compose.prod.yml exec postgres pg_dump -U postgres ai_meeting > backup_$(date +%Y%m%d_%H%M%S).sql
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec postgres pg_dump -U postgres ai_meeting > backup_$(date +%Y%m%d_%H%M%S).sql
 
 # 恢复
-docker-compose -f docker-compose.prod.yml exec -T postgres psql -U postgres ai_meeting < backup.sql
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec -T postgres psql -U postgres ai_meeting < backup.sql
 ```
 
 ### 清理
 
 ```bash
 # 停止并删除所有容器、网络、卷
-docker-compose -f docker-compose.prod.yml down -v
+docker-compose --env-file .env.production -f docker-compose.prod.yml down -v
 
 # 清理未使用的镜像
 docker image prune -a
@@ -331,7 +331,7 @@ certbot renew --dry-run
 ## 获取帮助
 
 - 详细文档：`/root/ai_meeting/deploy/DEPLOYMENT.md`
-- 查看日志：`docker-compose -f docker-compose.prod.yml logs -f`
+- 查看日志：`docker-compose --env-file .env.production -f docker-compose.prod.yml logs -f`
 - 健康检查：`curl -k https://YOUR_SERVER_IP/api/health`
 
 ---

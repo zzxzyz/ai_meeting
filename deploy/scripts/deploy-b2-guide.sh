@@ -255,24 +255,24 @@ echo ""
 echo -e "${YELLOW}第 7 步：部署 Docker 容器${NC}"
 
 # 停止旧容器
-if docker-compose -f docker-compose.prod.yml ps | grep -q "Up"; then
+if docker-compose --env-file .env.production -f docker-compose.prod.yml ps | grep -q "Up"; then
     echo "停止旧容器..."
-    docker-compose -f docker-compose.prod.yml down
+    docker-compose --env-file .env.production -f docker-compose.prod.yml down
 fi
 
 # 构建并启动
 echo "构建 Docker 镜像..."
-docker-compose -f docker-compose.prod.yml build --no-cache
+docker-compose --env-file .env.production -f docker-compose.prod.yml build --no-cache
 
 echo "启动容器..."
-docker-compose -f docker-compose.prod.yml up -d
+docker-compose --env-file .env.production -f docker-compose.prod.yml up -d
 
 echo "等待服务启动..."
 sleep 10
 
 # 运行数据库迁移
 echo "运行数据库迁移..."
-if docker-compose -f docker-compose.prod.yml exec -T backend npm run migration:run 2>/dev/null; then
+if docker-compose --env-file .env.production -f docker-compose.prod.yml exec -T backend npm run migration:run 2>/dev/null; then
     echo -e "${GREEN}✓${NC} 数据库迁移成功"
 else
     echo -e "${YELLOW}⚠${NC} 数据库迁移可能失败（如果是首次部署可忽略）"
@@ -288,7 +288,7 @@ echo -e "${YELLOW}第 8 步：健康检查${NC}"
 
 # 检查容器状态
 echo "检查容器状态..."
-docker-compose -f docker-compose.prod.yml ps
+docker-compose --env-file .env.production -f docker-compose.prod.yml ps
 
 # 检查端口
 echo ""
@@ -326,7 +326,7 @@ echo "健康检查："
 echo "  curl -k https://$SUBDOMAIN/api/health"
 echo ""
 echo "查看日志："
-echo "  docker-compose -f docker-compose.prod.yml logs -f"
+echo "  docker-compose --env-file .env.production -f docker-compose.prod.yml logs -f"
 echo ""
 echo "Nginx 日志："
 echo "  tail -f /var/log/nginx/ai-meeting-access.log"

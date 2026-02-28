@@ -54,24 +54,24 @@ source .env.production
 
 # 4. 停止旧容器
 log_info "停止旧容器..."
-docker-compose -f docker-compose.prod.yml down || true
+docker-compose --env-file .env.production -f docker-compose.prod.yml down || true
 
 # 5. 清理旧镜像 (可选)
 read -p "是否清理旧的 Docker 镜像? (y/N): " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     log_info "清理旧镜像..."
-    docker-compose -f docker-compose.prod.yml rm -f || true
+    docker-compose --env-file .env.production -f docker-compose.prod.yml rm -f || true
     docker system prune -f
 fi
 
 # 6. 构建镜像
 log_info "构建 Docker 镜像..."
-docker-compose -f docker-compose.prod.yml build --no-cache
+docker-compose --env-file .env.production -f docker-compose.prod.yml build --no-cache
 
 # 7. 启动服务
 log_info "启动服务..."
-docker-compose -f docker-compose.prod.yml up -d
+docker-compose --env-file .env.production -f docker-compose.prod.yml up -d
 
 # 8. 等待服务启动
 log_info "等待服务启动..."
@@ -79,11 +79,11 @@ sleep 10
 
 # 9. 检查服务状态
 log_info "检查服务状态..."
-docker-compose -f docker-compose.prod.yml ps
+docker-compose --env-file .env.production -f docker-compose.prod.yml ps
 
 # 10. 运行数据库迁移
 log_info "运行数据库迁移..."
-docker-compose -f docker-compose.prod.yml exec -T backend npm run migration:run || log_warn "数据库迁移失败或无需迁移"
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec -T backend npm run migration:run || log_warn "数据库迁移失败或无需迁移"
 
 # 11. 健康检查
 log_info "执行健康检查..."
@@ -111,7 +111,7 @@ log_info "访问地址:"
 log_info "  - HTTP:  http://YOUR_SERVER_IP"
 log_info "  - HTTPS: https://YOUR_SERVER_IP"
 log_info ""
-log_info "查看日志: docker-compose -f docker-compose.prod.yml logs -f"
-log_info "停止服务: docker-compose -f docker-compose.prod.yml down"
-log_info "重启服务: docker-compose -f docker-compose.prod.yml restart"
+log_info "查看日志: docker-compose --env-file .env.production -f docker-compose.prod.yml logs -f"
+log_info "停止服务: docker-compose --env-file .env.production -f docker-compose.prod.yml down"
+log_info "重启服务: docker-compose --env-file .env.production -f docker-compose.prod.yml restart"
 log_info "====================================="

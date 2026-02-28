@@ -178,49 +178,49 @@ openssl rand -base64 32
 
 ```bash
 cd /root/ai_meeting
-docker-compose -f docker-compose.prod.yml ps
+docker-compose --env-file .env.production -f docker-compose.prod.yml ps
 ```
 
 ### 查看日志
 
 ```bash
 # 所有服务
-docker-compose -f docker-compose.prod.yml logs -f
+docker-compose --env-file .env.production -f docker-compose.prod.yml logs -f
 
 # 只看后端
-docker-compose -f docker-compose.prod.yml logs -f backend
+docker-compose --env-file .env.production -f docker-compose.prod.yml logs -f backend
 
 # 只看前端
-docker-compose -f docker-compose.prod.yml logs -f frontend
+docker-compose --env-file .env.production -f docker-compose.prod.yml logs -f frontend
 ```
 
 ### 重启服务
 
 ```bash
 # 重启所有服务
-docker-compose -f docker-compose.prod.yml restart
+docker-compose --env-file .env.production -f docker-compose.prod.yml restart
 
 # 只重启后端
-docker-compose -f docker-compose.prod.yml restart backend
+docker-compose --env-file .env.production -f docker-compose.prod.yml restart backend
 ```
 
 ### 停止服务
 
 ```bash
-docker-compose -f docker-compose.prod.yml stop
+docker-compose --env-file .env.production -f docker-compose.prod.yml stop
 ```
 
 ### 启动服务
 
 ```bash
-docker-compose -f docker-compose.prod.yml start
+docker-compose --env-file .env.production -f docker-compose.prod.yml start
 ```
 
 ### 完全清理
 
 ```bash
 # 停止并删除所有容器、网络、卷
-docker-compose -f docker-compose.prod.yml down -v
+docker-compose --env-file .env.production -f docker-compose.prod.yml down -v
 
 # 清理未使用的镜像
 docker image prune -a
@@ -247,7 +247,7 @@ curl -k https://YOUR_SERVER_IP/api/health
 
 ```bash
 # 检查所有容器状态
-docker-compose -f docker-compose.prod.yml ps
+docker-compose --env-file .env.production -f docker-compose.prod.yml ps
 
 # 检查容器健康状态
 docker inspect --format='{{.State.Health.Status}}' ai_meeting_backend_1
@@ -275,16 +275,16 @@ free -h
 
 # 2. 停止服务
 cd /root/ai_meeting
-docker-compose -f docker-compose.prod.yml down
+docker-compose --env-file .env.production -f docker-compose.prod.yml down
 
 # 3. 重新构建
-docker-compose -f docker-compose.prod.yml build --no-cache
+docker-compose --env-file .env.production -f docker-compose.prod.yml build --no-cache
 
 # 4. 启动服务
-docker-compose -f docker-compose.prod.yml up -d
+docker-compose --env-file .env.production -f docker-compose.prod.yml up -d
 
 # 5. 运行数据库迁移
-docker-compose -f docker-compose.prod.yml exec backend npm run migration:run
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec backend npm run migration:run
 
 # 6. 验证
 curl -k https://YOUR_SERVER_IP/api/health
@@ -296,11 +296,11 @@ curl -k https://YOUR_SERVER_IP/api/health
 
 ```bash
 # 备份到文件
-docker-compose -f docker-compose.prod.yml exec postgres \
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec postgres \
   pg_dump -U postgres ai_meeting > backup_$(date +%Y%m%d_%H%M%S).sql
 
 # 备份所有数据库
-docker-compose -f docker-compose.prod.yml exec postgres \
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec postgres \
   pg_dumpall -U postgres > backup_all_$(date +%Y%m%d_%H%M%S).sql
 ```
 
@@ -308,11 +308,11 @@ docker-compose -f docker-compose.prod.yml exec postgres \
 
 ```bash
 # 恢复单个数据库
-docker-compose -f docker-compose.prod.yml exec -T postgres \
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec -T postgres \
   psql -U postgres ai_meeting < backup.sql
 
 # 恢复所有数据库
-docker-compose -f docker-compose.prod.yml exec -T postgres \
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec -T postgres \
   psql -U postgres < backup_all.sql
 ```
 
@@ -325,7 +325,7 @@ docker-compose -f docker-compose.prod.yml exec -T postgres \
 crontab -e
 
 # 添加每日凌晨 2 点备份
-0 2 * * * cd /root/ai_meeting && docker-compose -f docker-compose.prod.yml exec postgres pg_dump -U postgres ai_meeting > /root/backups/ai_meeting_$(date +\%Y\%m\%d).sql
+0 2 * * * cd /root/ai_meeting && docker-compose --env-file .env.production -f docker-compose.prod.yml exec postgres pg_dump -U postgres ai_meeting > /root/backups/ai_meeting_$(date +\%Y\%m\%d).sql
 ```
 
 ## 🆘 故障排查
@@ -334,34 +334,34 @@ crontab -e
 
 ```bash
 # 查看详细日志
-docker-compose -f docker-compose.prod.yml logs backend
+docker-compose --env-file .env.production -f docker-compose.prod.yml logs backend
 
 # 检查配置文件语法
-docker-compose -f docker-compose.prod.yml config
+docker-compose --env-file .env.production -f docker-compose.prod.yml config
 ```
 
 ### 问题：数据库连接失败
 
 ```bash
 # 进入数据库容器
-docker-compose -f docker-compose.prod.yml exec postgres bash
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec postgres bash
 
 # 测试连接
 psql -U postgres -d ai_meeting -c "\dt"
 
 # 检查环境变量
-docker-compose -f docker-compose.prod.yml exec backend env | grep DB_
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec backend env | grep DB_
 ```
 
 ### 问题：前端无法访问后端
 
 ```bash
 # 检查 Nginx 配置
-docker-compose -f docker-compose.prod.yml exec frontend \
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec frontend \
   cat /etc/nginx/conf.d/default.conf
 
 # 测试后端连接
-docker-compose -f docker-compose.prod.yml exec frontend \
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec frontend \
   wget -O- http://backend:3000/api/health
 ```
 
@@ -379,7 +379,7 @@ systemctl stop <service_name>
 
 ## 📞 获取帮助
 
-1. **查看日志**: `docker-compose -f docker-compose.prod.yml logs -f`
+1. **查看日志**: `docker-compose --env-file .env.production -f docker-compose.prod.yml logs -f`
 2. **阅读详细文档**: `deploy/DEPLOYMENT.md`
 3. **检查环境**: `deploy/scripts/pre-check.sh`
 4. **健康检查**: `curl -k https://YOUR_SERVER_IP/api/health`

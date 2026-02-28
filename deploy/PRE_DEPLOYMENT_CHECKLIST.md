@@ -124,7 +124,7 @@ openssl x509 -in cert.pem -text -noout | grep -E "Subject:|Not After"
 ```bash
 # 验证 Docker Compose 配置
 cd /root/ai_meeting
-docker-compose -f docker-compose.prod.yml config
+docker-compose --env-file .env.production -f docker-compose.prod.yml config
 ```
 
 ## ✅ 脚本权限检查
@@ -178,8 +178,8 @@ chmod 600 /root/ai_meeting/deploy/ssl/key.pem
 
 - [ ] 已备份现有数据（如果有）
 - [ ] 已准备好回滚方案
-- [ ] 知道如何停止服务：`docker-compose -f docker-compose.prod.yml down`
-- [ ] 知道如何查看日志：`docker-compose -f docker-compose.prod.yml logs -f`
+- [ ] 知道如何停止服务：`docker-compose --env-file .env.production -f docker-compose.prod.yml down`
+- [ ] 知道如何查看日志：`docker-compose --env-file .env.production -f docker-compose.prod.yml logs -f`
 
 ## ✅ 监控和通知
 

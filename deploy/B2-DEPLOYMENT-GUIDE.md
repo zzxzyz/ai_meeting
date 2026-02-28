@@ -213,16 +213,16 @@ VITE_API_URL=https://meeting.example.com  # 改成您的子域名
 cd /root/ai_meeting
 
 # 停止旧容器（如果有）
-docker-compose -f docker-compose.prod.yml down
+docker-compose --env-file .env.production -f docker-compose.prod.yml down
 
 # 构建镜像
-docker-compose -f docker-compose.prod.yml build --no-cache
+docker-compose --env-file .env.production -f docker-compose.prod.yml build --no-cache
 
 # 启动容器
-docker-compose -f docker-compose.prod.yml up -d
+docker-compose --env-file .env.production -f docker-compose.prod.yml up -d
 
 # 运行数据库迁移
-docker-compose -f docker-compose.prod.yml exec backend npm run migration:run
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec backend npm run migration:run
 ```
 
 ---
@@ -231,7 +231,7 @@ docker-compose -f docker-compose.prod.yml exec backend npm run migration:run
 
 ```bash
 # 检查容器状态
-docker-compose -f docker-compose.prod.yml ps
+docker-compose --env-file .env.production -f docker-compose.prod.yml ps
 
 # 应该看到 4 个容器都是 Up (healthy)
 
@@ -282,8 +282,8 @@ systemctl status nginx
 netstat -tlnp | grep -E ":(80|443|8080)"
 
 # 检查 Docker 容器
-docker-compose -f docker-compose.prod.yml ps
-docker-compose -f docker-compose.prod.yml logs frontend
+docker-compose --env-file .env.production -f docker-compose.prod.yml ps
+docker-compose --env-file .env.production -f docker-compose.prod.yml logs frontend
 
 # 测试内网连接
 curl http://localhost:8080
@@ -325,10 +325,10 @@ tail -f /var/log/nginx/ai-meeting-error.log
 
 ```bash
 # Docker 容器日志
-docker-compose -f docker-compose.prod.yml logs -f
+docker-compose --env-file .env.production -f docker-compose.prod.yml logs -f
 
 # 只看后端日志
-docker-compose -f docker-compose.prod.yml logs -f backend
+docker-compose --env-file .env.production -f docker-compose.prod.yml logs -f backend
 
 # Nginx 日志
 tail -f /var/log/nginx/ai-meeting-access.log
@@ -339,7 +339,7 @@ tail -f /var/log/nginx/ai-meeting-error.log
 
 ```bash
 # 重启所有 Docker 容器
-docker-compose -f docker-compose.prod.yml restart
+docker-compose --env-file .env.production -f docker-compose.prod.yml restart
 
 # 重启系统 Nginx
 systemctl restart nginx
@@ -351,10 +351,10 @@ systemctl restart nginx
 # 1. 上传新代码
 # 2. 重新构建并部署
 cd /root/ai_meeting
-docker-compose -f docker-compose.prod.yml down
-docker-compose -f docker-compose.prod.yml build --no-cache
-docker-compose -f docker-compose.prod.yml up -d
-docker-compose -f docker-compose.prod.yml exec backend npm run migration:run
+docker-compose --env-file .env.production -f docker-compose.prod.yml down
+docker-compose --env-file .env.production -f docker-compose.prod.yml build --no-cache
+docker-compose --env-file .env.production -f docker-compose.prod.yml up -d
+docker-compose --env-file .env.production -f docker-compose.prod.yml exec backend npm run migration:run
 ```
 
 ### SSL 证书续期
